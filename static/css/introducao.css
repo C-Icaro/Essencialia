@@ -109,6 +109,7 @@ section {
             }
 
         }
+        
     }
 
     .indicators{
@@ -132,5 +133,39 @@ section {
             }
         }
 
+    }
+}
+
+
+section{
+
+    & .list{
+
+        & .item {
+            transform: translateX(100vw);
+            transition: 0.5s;
+            opacity: 0;
+
+                & .content{
+                    & .welcome, .title, .description, .next{
+                        transform: translateX(-100vw);
+                        transition: 0.7s;
+                        transition-delay: 0.3s;
+                    }
+                }
+        }
+
+        & .active{
+            transform: translateX(0);
+            opacity: 1;
+
+            & .content{
+                & .welcome, .title, .description, .next{
+                    transform: translateX(0);
+                }
+            }
+        }
+
+ 
     }
 }
