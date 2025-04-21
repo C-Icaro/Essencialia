@@ -1,0 +1,136 @@
+/* Configurações globais do CSS */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    height: 100%;
+    list-style: none;
+}
+
+body {
+    color: black;
+    font-size: 32px;
+    overflow: hidden;
+}
+
+header {
+    position: fixed;
+    left: 50%; 
+    transform: translate(-50%, 5%);
+    display: grid;
+    align-items: top;
+    z-index: 2;
+    
+
+    & img{
+        width: 300px;
+        height: 90px;
+    }
+}
+
+section {
+    background-image: linear-gradient(to bottom, #C6FFD6, #FFFFFF);
+    height: 100vh;
+    position: relative;
+
+    & .list{ 
+        width: 70vw;
+        height: 100%;
+        margin: auto;
+        position: relative;
+
+        & .item{
+            position: absolute;
+            inset: 0;
+
+            & .int_img{
+                position: absolute;
+                right: 5%;
+                transform: translate(45%, 0%);
+                bottom: 0;
+                width: 80%;
+                height: 80%;
+            }
+
+            & .content{
+                position: absolute;
+                left: -5%;
+                width: 70%;
+                height: 50%;
+                top: 25%;
+                display: flex;
+                flex-direction: column;
+                justify-content: start;    
+                align-items: left;
+                gap: 30px;
+                font-family: 'Poppins', sans-serif;
+
+                & .welcome{
+                    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif ;    
+                    font-size: 32px;
+                    font-weight: 400;
+                    color: #13803B;
+                    line-height: 1;
+                }
+
+                & .title{
+                    font-size: 56px;
+                    width: 110%;
+                    font-weight: bold;
+                    color: #333333;
+                    line-height: 1;
+                }
+
+                & .description{
+                    font-size: 24px;
+                    width: 90%;
+                    font-weight: Light;
+                    color: #13803B;
+                    line-height: 0.8;
+                }
+
+                & .next{
+                    font-size: 24px;
+                    font-weight: bold;
+                    border: 2px solid #13803B;
+                    border-radius: 20px;
+                    color: #FFFFFF;
+                    background-color: #78dd9d;
+                    width: 40%;
+                    cursor: pointer;
+
+                    &:hover {
+                        background-color: rgb(30, 189, 88);
+                        transition: 0.5s;
+                    }
+                    
+                }
+
+            }
+
+        }
+    }
+
+    .indicators{
+        position: absolute;
+        top: 80%;
+        left: 57%;
+        transform: translateX(-50%);
+        height: 200px;
+        width: 90vw;
+       
+        & ul {
+            display: flex;
+            gap: 10px;
+
+            & li {
+                width: 20px;
+                height: 20px;
+                background-color: #ABF7C0;
+                border-radius: 50%;
+                transition: 0.5s;
+            }
+        }
+
+    }
+}

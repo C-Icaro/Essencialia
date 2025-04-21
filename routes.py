@@ -4,7 +4,11 @@ from flask import render_template # Importando a função render_template do Fla
 # Definindo rotas do web server
 
 @app.route("/") # Rota para a Home Page
-def homepage(): # Fundação que será chamada quando a rota for acessada
+def introducao(): # Fundação que será chamada quando a rota for acessada
+    return render_template("introducao01.html")
+
+@app.route("/homepage") # Rota para a Home Page
+def homepage():
     return render_template("homepage.html")
 
 @app.route("/dashboard") # Rota para a Home Page
