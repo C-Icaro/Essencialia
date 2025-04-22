@@ -75,7 +75,7 @@ section {
 
                 & .title{
                     font-size: 56px;
-                    width: 110%;
+                    width: 85%;
                     font-weight: bold;
                     color: #333333;
                     line-height: 1;
@@ -83,7 +83,7 @@ section {
 
                 & .description{
                     font-size: 24px;
-                    width: 90%;
+                    width: 85%;
                     font-weight: Light;
                     color: #13803B;
                     line-height: 0.8;
@@ -169,3 +169,4 @@ section{
  
     }
 }
+
