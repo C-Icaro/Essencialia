@@ -1,0 +1,13 @@
+header{
+    position: fixed;
+    left: 50%;
+    transform: translate(-50%, 5%);
+    display: grid;
+    align-items: top;
+    z-index: 2;
+
+    & img{
+        width: 300px;
+        height: 90px;
+    }
+}
