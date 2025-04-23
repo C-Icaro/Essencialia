@@ -6,7 +6,7 @@ app = Flask(__name__)
 app.config["BROKER_HOST"] = BROKER_HOST
 app.config["BROKER_PORT"] = BROKER_PORT
 
-# Cria um contexto de aplicação para inicializar o cliente MQTT
+# Inicializa o cliente MQTT
 with app.app_context():
     mqtt_client = start_mqtt(app.config["BROKER_HOST"], app.config["BROKER_PORT"])
 
