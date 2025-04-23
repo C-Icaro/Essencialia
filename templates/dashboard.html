@@ -4,13 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
 </head>
 <body>
     <header>
         <div>
-        <img src="../static/assets/logo-essencialia.png" alt="Logo Essenciália">
+        <img src="../static/assets/logo-essencialiaBranca.png" alt="Logo Essenciália">
         </div>
 
+        <nav> 
+            <ul>    
+                <li>Home</li>
+                <li>Dashboard</li>
+                <li>Histórico</li>
+                <li>Biblioteca</li>
+            </ul>
+        </nav>
+
+        <!--
         <div class="home">
             <img src="../static/assets/simbolo-casa.png" alt="Simbolo Casa">
             <div class="menuInfo">Home</div>
@@ -22,6 +33,7 @@
             <div class="menuInfo">Dashboard</div>
             <img src="../static/assets/simbolo-arrow.png" alt="Simbolo Seta">
         </div>
+        -->
 
     </header>
 
@@ -32,28 +44,26 @@
 
         <div class="nameBoard">
             <div class="boardTitle">Nome da planta</div>
-            <div class="boardInfo">VariávelNomePlanta?</div>
+            <div class="boardInfo">Carregando...</div>
         </div>
 
-        <div class="temperatueBoard">
+        <div class="temperatureBoard">
             <div class="boardTitle">Temperatura</div>
-            <div class="boardInfo">VariávelTemp?</div>
-            <img src="../static/assets/simbolo-temperatura.png" alt="Simbolo Temperatura">
+            <div class="boardInfo">Carregando...</div>
         </div>
 
         <div class="waterLevelBoard">
             <div class="boardTitle">Nível da água</div>
-            <div class="boardInfo">VariávelNivelÁgua?</div>
+            <div class="boardInfo">Carregando...</div>
         </div>
 
         <div class="pressureBoard">
             <div class="boardTitle">Pressão</div>
-            <div class="boardInfo">VariávelPressão?</div>
+            <div class="boardInfo">Carregando...</div>
         </div>
-
 
     </section>
         
-
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>

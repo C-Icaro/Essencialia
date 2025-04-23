@@ -1,7 +1,16 @@
-from flask import Flask # Importando o framework Flask
+from flask import Flask
+from config import BROKER_HOST, BROKER_PORT
+from mqtt.mqtt_handler import start_mqtt, mqtt_data
 
-app = Flask(__name__) # Criando uma instância do Flask
+app = Flask(__name__)
+app.config["BROKER_HOST"] = BROKER_HOST
+app.config["BROKER_PORT"] = BROKER_PORT
 
-from routes import * # Importando as rotas definidas no arquivo routes.py
-if __name__ == "__main__": # Verifica se o script está sendo executado diretamente
-    app.run() # Executando o web server
+# Cria um contexto de aplicação para inicializar o cliente MQTT
+with app.app_context():
+    mqtt_client = start_mqtt(app.config["BROKER_HOST"], app.config["BROKER_PORT"])
+
+from routes import *
+
+if __name__ == "__main__":
+    app.run(debug=True)

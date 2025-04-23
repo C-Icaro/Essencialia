@@ -1,13 +1,86 @@
-header{
-    position: fixed;
-    left: 50%;
-    transform: translate(-50%, 5%);
-    display: grid;
-    align-items: top;
-    z-index: 2;
-
-    & img{
-        width: 300px;
-        height: 90px;
-    }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    height: 100%;
+    list-style: none;
 }
+
+body{
+    background-color: #F3F5FB;
+    color: #455A64;
+    font-size: 16px;
+    font-family: poppins, sans-serif;
+
+}
+
+header {
+    width: 20%; /* Ocupa 20% da largura da tela */
+    height: 100%; /* Ocupa 100% da altura da tela */
+    position: fixed; /* Fixa o header na posição */
+    left: 0; /* Alinha à esquerda */
+    top: 0; /* Garante que comece do topo */
+    background-color: #42C28D; /* Cor de fundo */
+    color: #F3F5FB; 
+    display: grid; /* Mantém o layout interno em grid */
+    grid-template-rows: 1fr 1 fr;
+    align-items: center; /* Alinha os itens ao topo */
+    z-index: 2; /* Garante que fique acima de outros elementos */
+    gap: 10px; /* Espaçamento entre os elementos internos */
+
+
+    & img {
+        position: absolute; /* Posiciona a imagem de forma absoluta */
+        left: 50%; /* Centraliza horizontalmente */
+        transform: translate(-50%, 0%); /* Ajusta a posição para centralizar */
+        top: 5%; /* Distância do topo */
+        width: 150px; /* Largura da imagem */
+        height: 45px; /* Altura da imagem */
+    }
+
+    & nav {
+        display: flex; /* Exibe os itens em flexbox */
+        top: 20%;
+        flex-direction: column; /* Alinha os itens em coluna (um abaixo do outro) */
+        justify-content: center; /* Centraliza os itens verticalmente no header */
+        align-items: center; /* Centraliza os itens horizontalmente */
+        gap: 20px; /* Espaçamento entre os itens */
+        height: 20%; /* Garante que o nav ocupe toda a altura disponível */
+        cursor: pointer; /* Muda o cursor para indicar que é clicável */
+    }
+
+}
+
+section {
+    width: 80%; /* Ocupa 80% da largura da tela */
+    height: 80%; /* Ocupa 100% da altura da tela */
+    margin-left: 22%; /* Deixa espaço para o header */
+    position: relative; /* Permite o posicionamento absoluto dos filhos */
+    display: flex; /* Exibe os itens em flexbox */
+    flex-direction: column; /* Alinha os itens em coluna */
+    justify-content: flex-start; /* Alinha os itens ao topo */
+    gap: 20px; /* Espaçamento entre os elementos */
+    padding-top: 5%; /* Adiciona espaçamento superior */
+}
+
+section .title {
+    font-size: 24px; /* Tamanho da fonte do título */
+    font-weight: bold; /* Negrito */
+    margin-bottom: 20px; /* Espaçamento abaixo do título */
+}
+
+section .nameBoard,
+section .temperatureBoard,
+section .waterLevelBoard,
+section .pressureBoard {
+    background-color: #acebbe; /* Cor de fundo */
+    border-radius: 15px; /* Bordas arredondadas */
+    width: 40%; /* Ocupa toda a largura disponível */
+    height: auto; /* Ajusta a altura automaticamente ao conteúdo */
+    padding: 20px; /* Adiciona espaçamento interno */
+    display: flex; /* Exibe os itens em flexbox */
+    flex-direction: column; /* Alinha os itens em coluna */
+    justify-content: flex-start; /* Alinha os itens ao topo */
+    gap: 10px; /* Espaçamento entre os textos */
+}
+
