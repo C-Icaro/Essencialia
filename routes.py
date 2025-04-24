@@ -1,6 +1,7 @@
 from app import app  # Importando o objeto app do arquivo app.py
 from flask import render_template, jsonify  # Importando render_template e jsonify
 from mqtt.mqtt_handler import mqtt_data  # Importando mqtt_data
+import sqlite3  # Importando sqlite3
 
 # Definindo rotas do web server
 
@@ -19,4 +20,19 @@ def dashboard():
 @app.route("/mqtt-data")
 def get_mqtt_data():
     return jsonify(mqtt_data)
+
+@app.route("/temperature-data")
+def get_temperature_data():
+    conn = sqlite3.connect("data.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT timestamp, temperature FROM temperature_data ORDER BY timestamp ASC")
+    rows = cursor.fetchall()
+    conn.close()
+
+    # Formatar os dados para o gráfico
+    data = {
+        "timestamps": [row[0] for row in rows],
+        "temperatures": [row[1] for row in rows]
+    }
+    return jsonify(data)
 

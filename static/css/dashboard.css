@@ -54,33 +54,68 @@ header {
 section {
     width: 80%; /* Ocupa 80% da largura da tela */
     height: 80%; /* Ocupa 100% da altura da tela */
-    margin-left: 22%; /* Deixa espaço para o header */
+    margin-left: 20%; /* Deixa espaço para o header */
     position: relative; /* Permite o posicionamento absoluto dos filhos */
     display: flex; /* Exibe os itens em flexbox */
     flex-direction: column; /* Alinha os itens em coluna */
     justify-content: flex-start; /* Alinha os itens ao topo */
     gap: 20px; /* Espaçamento entre os elementos */
     padding-top: 5%; /* Adiciona espaçamento superior */
-}
 
-section .title {
-    font-size: 24px; /* Tamanho da fonte do título */
-    font-weight: bold; /* Negrito */
-    margin-bottom: 20px; /* Espaçamento abaixo do título */
-}
+    & .title {
+        
+        width: 100%; /* Ocupa toda a largura disponível */
+        text-align: left; /* Centraliza o texto */
+        font-size: 24px; /* Tamanho da fonte do título */
+        font-weight: bold; /* Negrito */
+        margin-bottom:10px; /* Espaçamento abaixo do título */
+        margin-left: 25px;
+    }
 
-section .nameBoard,
-section .temperatureBoard,
-section .waterLevelBoard,
-section .pressureBoard {
-    background-color: #acebbe; /* Cor de fundo */
-    border-radius: 15px; /* Bordas arredondadas */
-    width: 40%; /* Ocupa toda a largura disponível */
-    height: auto; /* Ajusta a altura automaticamente ao conteúdo */
-    padding: 20px; /* Adiciona espaçamento interno */
-    display: flex; /* Exibe os itens em flexbox */
-    flex-direction: column; /* Alinha os itens em coluna */
-    justify-content: flex-start; /* Alinha os itens ao topo */
-    gap: 10px; /* Espaçamento entre os textos */
+    & .content {
+        display: flex; /* Exibe os itens em flexbox */
+        flex-direction: row; /* Alinha os itens em linha (lado a lado) */
+        justify-content: space-between; /* Espaçamento uniforme entre as colunas */
+        align-items: flex-start; /* Alinha os itens ao topo */
+        gap: 30px; /* Espaçamento entre as colunas */
+        font-family: 'Poppins', sans-serif; /* Fonte utilizada */
+        width: 100%; /* Ocupa toda a largura disponível */
+        padding: 20px; /* Adiciona espaçamento interno */
+        box-sizing: border-box; /* Inclui padding e borda no cálculo do tamanho */
+
+        & .boards {
+            display: flex; /* Exibe os itens em flexbox */
+            flex-direction: column; /* Alinha os itens em coluna */
+            gap: 20px; /* Espaçamento entre os boards */
+            width: 40%; /* Ocupa X% da largura */
+
+            & > div {
+                background-color: #acebbe; /* Cor de fundo */
+                border-radius: 15px; /* Bordas arredondadas */
+                padding: 20px; /* Adiciona espaçamento interno */
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra para destaque */
+                display: flex; /* Exibe os itens em flexbox */
+                flex-direction: column; /* Alinha os itens em coluna */
+                gap: 10px; /* Espaçamento entre os textos */
+            }
+        }
+
+        & .temperatureChart{
+            width: 60%; /* Ocupa 50% da largura */
+            background-color: #fff; /* Cor de fundo */
+            border: 1px solid #ccc; /* Borda */
+            border-radius: 8px; /* Bordas arredondadas */
+            padding: 15px; /* Adiciona espaçamento interno */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra para destaque */
+            display: flex; /* Exibe os itens em flexbox */
+            justify-content: center; /* Centraliza o gráfico horizontalmente */
+            align-items: center; /* Centraliza o gráfico verticalmente */
+
+            & canvas {
+                width: 100%; /* O gráfico ocupa toda a largura disponível */
+                height: 400px; /* Altura fixa para o gráfico */
+            }
+        }
+    }
 }
 

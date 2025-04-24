@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <header>
@@ -42,26 +43,40 @@
             Dashboard
         </div>
 
-        <div class="nameBoard">
-            <div class="boardTitle">Nome da planta</div>
-            <div class="boardInfo">Manjericão</div>
-        </div>
+        <div class="content">
+            <!-- Boards -->
+            <div class="boards">
+                <div class="nameBoard">
+                    <div class="boardTitle">Nome da planta</div>
+                    <div class="boardInfo">Carregando...</div>
+                </div>
 
-        <div class="temperatureBoard">
-            <div class="boardTitle">Temperatura</div>
-            <div class="boardInfo">Carregando...</div>
-        </div>
+                <div class="temperatureBoard">
+                    <div class="boardTitle">Temperatura</div>
+                    <div class="boardInfo">Carregando...</div>
+                </div>
 
-        <div class="waterLevelBoard">
-            <div class="boardTitle">Nível da água</div>
-            <div class="boardInfo">Carregando...</div>
-        </div>
+                <div class="waterLevelBoard">
+                    <div class="boardTitle">Nível da água</div>
+                    <div class="boardInfo">Carregando...</div>
+                </div>
 
-        <div class="pressureBoard">
-            <div class="boardTitle">Pressão</div>
-            <div class="boardInfo">Carregando...</div>
+                <div class="pressureBoard">
+                    <div class="boardTitle">Pressão</div>
+                    <div class="boardInfo">Carregando...</div>
+                </div>
+            </div>
+            
+            <!-- Gráfico de temperatura -->
+            <div class="grafics">
+                <div class="temperatureChart">
+                    <canvas id="temperatureChart"></canvas>
+                </div>
+                <div class="pressureChart">
+                    <canvas id="pressureChart"></canvas>
+                </div>
+            </div>
         </div>
-
     </section>
         
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
