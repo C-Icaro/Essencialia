@@ -14,7 +14,7 @@ def gerar_dados_ficticios():
     """Gera dados fictícios para enviar ao broker."""
     temperatura = round(random.uniform(20.0, 50), 1)  # Temperatura entre 20.0 e 35.0
     nivel = random.choice(["BAIXO","ALTO"])  # Nível fictício
-    pressao_kPa = round(random.uniform(90.0, 110.0), 1)  # Pressão entre 90.0 e 110.0
+    pressao_kPa = round(random.uniform(10, 40), 1)  # Pressão entre 10.0 e 40.0
     return {
         "temperatura": temperatura,
         "nivel": nivel,
@@ -42,7 +42,7 @@ def enviar_dados():
         except subprocess.CalledProcessError as e:
             print(f"Erro ao enviar dados: {e}")
         
-        # Aguarda 5 segundos antes de enviar novamente
+        # Aguarda 10 segundos antes de enviar novamente
         time.sleep(10)
 
 if __name__ == "__main__":

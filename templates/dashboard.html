@@ -1,84 +1,263 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
+    <title>Essenciália - Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
 </head>
 <body>
-    <header>
-        <div>
-        <img src="../static/assets/logo-essencialiaBranca.png" alt="Logo Essenciália">
-        </div>
-
-        <nav> 
-            <ul>    
-                <li>Home</li>
-                <li>Dashboard</li>
-                <li>Histórico</li>
-                <li>Biblioteca</li>
-            </ul>
-        </nav>
-
-        <!--
-        <div class="home">
-            <img src="../static/assets/simbolo-casa.png" alt="Simbolo Casa">
-            <div class="menuInfo">Home</div>
-            <img src="../static/assets/simbolo-arrow.png" alt="Simbolo Seta">
-        </div>
-
-        <div class="dashboard">
-            <img src="../static/assets/simbolo-dashboard.png" alt="Simbolo Casa">
-            <div class="menuInfo">Dashboard</div>
-            <img src="../static/assets/simbolo-arrow.png" alt="Simbolo Seta">
-        </div>
-        -->
-
-    </header>
-
-    <section class="container">
-        <div class="title">
-            Dashboard
-        </div>
-
-        <div class="content">
-            <!-- Boards -->
-            <div class="boards">
-                <div class="nameBoard">
-                    <div class="boardTitle">Nome da planta</div>
-                    <div class="boardInfo">Carregando...</div>
-                </div>
-
-                <div class="temperatureBoard">
-                    <div class="boardTitle">Temperatura</div>
-                    <div class="boardInfo">Carregando...</div>
-                </div>
-
-                <div class="waterLevelBoard">
-                    <div class="boardTitle">Nível da água</div>
-                    <div class="boardInfo">Carregando...</div>
-                </div>
-
-                <div class="pressureBoard">
-                    <div class="boardTitle">Pressão</div>
-                    <div class="boardInfo">Carregando...</div>
-                </div>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">🌿</div>
+                <h1>Essenciália</h1>
             </div>
             
-            <!-- Gráfico de temperatura -->
-            <div class="grafics">
-                <div class="temperatureChart">
-                    <canvas id="temperatureChart"></canvas>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Home</span>
+                    <span class="arrow">›</span>
+                </a>
+                <a href="#" class="nav-item active">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                    <span class="arrow">›</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📜</span>
+                    <span class="nav-text">Histórico</span>
+                    <span class="arrow">›</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-text">Biblioteca</span>
+                    <span class="arrow">›</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">🛟</span>
+                    <span class="nav-text">Suporte</span>
+                    <span class="arrow">›</span>
+                </a>
+            </nav>
+            
+            <button class="new-process-btn">
+                <span>Iniciar novo processo</span>
+                <span class="plus-icon">+</span>
+            </button>
+            
+            <a href="#" class="nav-item logout">
+                <span class="nav-icon">🚪</span>
+                <span class="nav-text">Sair</span>
+                <span class="arrow">›</span>
+            </a>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <h2>Dashboard</h2>
+                <div class="search-bar">
+                    <input type="text" placeholder="Pesquisar">
+                    <span class="search-icon">🔍</span>
                 </div>
-                <div class="pressureChart">
-                    <canvas id="pressureChart"></canvas>
+            </header>
+            
+            <div class="status-indicator">
+                <span class="status-label">Operando</span>
+                <span class="status-dot active"></span>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- Plant Info Section -->
+                <section class="plant-info">
+                    <div class="section-header">Nome da planta</div>
+                    <div class="plant-name">Nome da planta</div>
+                    
+                    <div class="plant-details">
+                        <div class="raw-material">
+                            <h4>Quantidade de matéria-prima</h4>
+                            <input type="text" value="000 gramas" class="material-input">
+                        </div>
+                        
+                        <div class="temperature">
+                            <h4>Temperatura do sistema</h4>
+                            <div class="temp-display">
+                                <span class="temp-value">0 °C</span>
+                                <span class="temp-icon">🌡️</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Time Remaining Section -->
+                <section class="time-remaining">
+                    <h3>Tempo restante</h3>
+                    <div class="time-display">00:00:00</div>
+                    <div class="progress-circle-container">
+                        <canvas id="progressCircle" width="150" height="150"></canvas>
+                        <div class="progress-text">000%</div>
+                    </div>
+                </section>
+                
+                <!-- Temperature Graph Section -->
+                <section class="temperature-graph">
+                    <h3>Temperatura</h3>
+                    <div class="graph-subtitle">Temperatura ao longo do tempo</div>
+                    <div class="graph-container">
+                        <canvas id="temperatureChart"></canvas>
+                    </div>
+                </section>
+                
+                <!-- Control Panel Section -->
+                <section class="control-panel">
+                    <h3>Painel de controle</h3>
+                    <div class="control-section">
+                        <h4>Controle de ativação</h4>
+                        <button id="interruptBtn" class="control-btn interrupt">
+                            <span class="btn-icon">⏸️</span>
+                            Interromper
+                        </button>
+                    </div>
+                    
+                    <div class="control-section">
+                        <h4>Regular temperatura</h4>
+                        <div class="temp-control">
+                            <button class="temp-btn increase">+</button>
+                            <div class="current-temp">00 °C</div>
+                            <button class="temp-btn decrease">-</button>
+                        </div>
+                    </div>
+                    
+                    <div class="control-section">
+                        <h4>Servo</h4>
+                        <div class="servo-controls">
+                            <button id="activateBtn" class="control-btn activate">
+                                <span class="btn-icon">⚡</span>
+                                Ativar
+                            </button>
+                            <button id="deactivateBtn" class="control-btn deactivate">
+                                <span class="btn-icon">⭕</span>
+                                Desativar
+                            </button>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Pressure Gauge Section -->
+                <section class="pressure-gauge">
+                    <h3>Pressão</h3>
+                    <div class="gauge-container">
+                        <canvas id="pressureGauge" width="300" height="150"></canvas>
+                        <div class="gauge-value">00 Pa</div>
+                        <div class="gauge-label">Estado: Normal</div>
+                    </div>
+                    <div class="gauge-legend">
+                        <div class="legend-item">
+                            <span class="legend-color low"></span>
+                            <span class="legend-text">Baixa</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color normal"></span>
+                            <span class="legend-text">Normal</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color attention"></span>
+                            <span class="legend-text">Atenção</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color high"></span>
+                            <span class="legend-text">Risco</span>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Water Level Section -->
+                <section class="water-level">
+                    <h3>Nível</h3>
+                    <div class="level-container">
+                        <div class="water-tank">
+                            <div class="water-fill" id="waterFill"></div>
+                        </div>
+                        <div class="level-info">
+                            <div class="level-label">Água</div>
+                            <div class="level-status">Baixo / Alto</div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Alerts Section -->
+                <section class="alerts">
+                    <h3>Avisos</h3>
+                    <div class="alert-list">
+                        <div class="alert error">
+                            <span class="alert-icon">⚠️</span>
+                            <span class="alert-text">Erro</span>
+                            <button class="close-alert">×</button>
+                        </div>
+                        <div class="alert success">
+                            <span class="alert-icon">✅</span>
+                            <span class="alert-text">Sucesso</span>
+                            <button class="close-alert">×</button>
+                        </div>
+                        <div class="alert info">
+                            <span class="alert-icon">ℹ️</span>
+                            <span class="alert-text">Info</span>
+                            <button class="close-alert">×</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal de Seleção de Plantas -->
+    <div class="modal" id="plantSelectionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Selecione a Planta</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="plant-grid">
+                    <div class="plant-card" data-plant="lavanda" data-temp="60" data-pressure="25">
+                        <div class="plant-icon">🌿</div>
+                        <h4>Lavanda</h4>
+                        <p>Temperatura: 60°C</p>
+                        <p>Pressão: 25 Pa</p>
+                    </div>
+                    <div class="plant-card" data-plant="eucalipto" data-temp="70" data-pressure="30">
+                        <div class="plant-icon">🌱</div>
+                        <h4>Eucalipto</h4>
+                        <p>Temperatura: 70°C</p>
+                        <p>Pressão: 30 Pa</p>
+                    </div>
+                    <div class="plant-card" data-plant="alecrim" data-temp="65" data-pressure="28">
+                        <div class="plant-icon">🌿</div>
+                        <h4>Alecrim</h4>
+                        <p>Temperatura: 65°C</p>
+                        <p>Pressão: 28 Pa</p>
+                    </div>
+                    <div class="plant-card" data-plant="manjericao" data-temp="55" data-pressure="22">
+                        <div class="plant-icon">🌱</div>
+                        <h4>Manjericão</h4>
+                        <p>Temperatura: 55°C</p>
+                        <p>Pressão: 22 Pa</p>
+                    </div>
+                    <div class="plant-card" data-plant="hortela" data-temp="50" data-pressure="20">
+                        <div class="plant-icon">🌿</div>
+                        <h4>Hortelã</h4>
+                        <p>Temperatura: 50°C</p>
+                        <p>Pressão: 20 Pa</p>
+                    </div>
                 </div>
             </div>
         </div>
-    </section>
-        
+    </div>
+    
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>
