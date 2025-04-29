@@ -21,6 +21,14 @@ def dashboard():
 def biblioteca():
     return render_template("biblioteca.html")
 
+@app.route("/historico")  # Rota para o histórico
+def historico():
+    return render_template("historico.html")
+
+@app.route("/suporte")  # Rota para o suporte
+def suporte():
+    return render_template("suporte.html")
+
 @app.route("/mqtt-data")
 def get_mqtt_data():
     return jsonify(mqtt_data)
