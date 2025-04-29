@@ -36,7 +36,7 @@ function initPlantSelection() {
             
             // Redirecionar para o dashboard com a planta selecionada
             setTimeout(() => {
-                window.location.href = `index.html?plant=${plantId}`;
+                window.location.href = `dashboard?plant=${plantId}`;
             }, 500);
         });
     });

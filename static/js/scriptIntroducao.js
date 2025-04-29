@@ -12,7 +12,7 @@ nextButtons.forEach(button => {
         if (active === items.length - 1) {
             active = 0; // Reinicia o contador
             console.log("Último botão clicado");
-            window.location.href = "dashboard"
+            window.location.href = "home"
             return; // Interrompe a execução do restante do código
         }
 
