@@ -512,7 +512,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ctx.fill()
   
       // Atualizar valor de pressão
-      document.querySelector(".gauge-value").textContent = `${Math.floor(pressure)} Pa`
+      document.querySelector(".gauge-value").textContent = `${Math.floor(pressure)} kPa`
   
       // Atualizar estado
       let state = "Baixa"

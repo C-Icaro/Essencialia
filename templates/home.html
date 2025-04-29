@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Essenciália - Home</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/home.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">🌿</div>
+                <h1>Essenciália</h1>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="home" class="nav-item active">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Home</span>
+                    <span class="arrow">›</span>
+                </a>
+                <a href="dashboard" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                    <span class="arrow">›</span>
+                </a>
+                <a href="historico" class="nav-item">
+                    <span class="nav-icon">📜</span>
+                    <span class="nav-text">Histórico</span>
+                    <span class="arrow">›</span>
+                </a>
+                <a href="biblioteca" class="nav-item">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-text">Biblioteca</span>
+                    <span class="arrow">›</span>
+                </a>
+                <a href="suporte" class="nav-item">
+                    <span class="nav-icon">🛟</span>
+                    <span class="nav-text">Suporte</span>
+                    <span class="arrow">›</span>
+                </a>
+            </nav>
+            
+            <button class="new-process-btn">
+                <span>Iniciar novo processo</span>
+                <span class="plus-icon">+</span>
+            </button>
+            
+            <a href="#" class="nav-item logout">
+                <span class="nav-icon">🚪</span>
+                <span class="nav-text">Sair</span>
+                <span class="arrow">›</span>
+            </a>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <h2>Bem vindo!</h2>
+                <div class="search-bar">
+                    <input type="text" placeholder="Pesquisar">
+                    <span class="search-icon">🔍</span>
+                </div>
+            </header>
+            
+            <!-- Home Content -->
+            <div class="home-content">
+                <!-- Em andamento Section -->
+                <section class="current-process">
+                    <h3 class="section-title">Em andamento</h3>
+                    
+                    <div class="process-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome da planta</th>
+                                    <th>Parte utilizada</th>
+                                    <th>Data</th>
+                                    <th>Hora</th>
+                                    <th>Verificar</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr id="current-process-row">
+                                    <td>Planta</td>
+                                    <td>Parte</td>
+                                    <td>00/00/0000</td>
+                                    <td>00:00</td>
+                                    <td><a href="dashboard" class="verify-btn">Acessar</a></td>
+                                    <td><span class="status-badge operating">Operando</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- System Status Cards -->
+                    <div class="system-status">
+                        <div class="status-card">
+                            <h4>Pressão atual</h4>
+                            <div class="status-value">
+                                <span class="value" id="pressure-value">75.0</span>
+                            </div>
+                        </div>
+                        
+                        <div class="status-card">
+                            <h4>Temperatura do sistema</h4>
+                            <div class="status-value">
+                                <span id="temperature-value">0 °C</span>
+                            </div>
+                        </div>
+                        
+                        <div class="status-card">
+                            <h4>Nível atual</h4>
+                            <div class="status-value">
+                                <span id="level-value">Baixo/Alto</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Ciclos anteriores Section -->
+                <section class="previous-cycles">
+                    <div class="section-header">
+                        <h3 class="section-title">Ciclos anteriores</h3>
+                        <div class="search-container">
+                            <input type="text" placeholder="Pesquisar no histórico" class="history-search">
+                        </div>
+                    </div>
+                    
+                    <div class="cycles-table">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome da planta</th>
+                                    <th>Parte utilizada</th>
+                                    <th>Data</th>
+                                    <th>Hora</th>
+                                    <th>Verificar</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="previous-cycles-body">
+                                <tr>
+                                    <td>Planta</td>
+                                    <td>Casca</td>
+                                    <td>00/00/0000</td>
+                                    <td>00:00</td>
+                                    <td><a href="#" class="verify-btn">Acessar</a></td>
+                                    <td><span class="status-badge completed">Concluído</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Planta</td>
+                                    <td>Folha</td>
+                                    <td>00/00/0000</td>
+                                    <td>00:00</td>
+                                    <td><a href="#" class="verify-btn">Acessar</a></td>
+                                    <td><span class="status-badge interrupted">Interrompido</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Planta</td>
+                                    <td>Caule</td>
+                                    <td>00/00/0000</td>
+                                    <td>00:00</td>
+                                    <td><a href="#" class="verify-btn">Acessar</a></td>
+                                    <td><span class="status-badge interrupted">Interrompido</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="view-all">
+                        <a href="historico" class="view-all-btn">Ir para Histórico</a>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal de Seleção de Plantas -->
+    <div class="modal" id="plantSelectionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Selecione a Planta</h3>
+                <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="plant-grid">
+                    <div class="plant-card" data-plant="lavanda" data-temp="60" data-pressure="25">
+                        <div class="plant-icon">🌿</div>
+                        <h4>Lavanda</h4>
+                        <p>Temperatura: 60°C</p>
+                        <p>Pressão: 25 Pa</p>
+                    </div>
+                    <div class="plant-card" data-plant="eucalipto" data-temp="70" data-pressure="30">
+                        <div class="plant-icon">🌱</div>
+                        <h4>Eucalipto</h4>
+                        <p>Temperatura: 70°C</p>
+                        <p>Pressão: 30 Pa</p>
+                    </div>
+                    <div class="plant-card" data-plant="alecrim" data-temp="65" data-pressure="28">
+                        <div class="plant-icon">🌿</div>
+                        <h4>Alecrim</h4>
+                        <p>Temperatura: 65°C</p>
+                        <p>Pressão: 28 Pa</p>
+                    </div>
+                    <div class="plant-card" data-plant="manjericao" data-temp="55" data-pressure="22">
+                        <div class="plant-icon">🌱</div>
+                        <h4>Manjericão</h4>
+                        <p>Temperatura: 55°C</p>
+                        <p>Pressão: 22 Pa</p>
+                    </div>
+                    <div class="plant-card" data-plant="hortela" data-temp="50" data-pressure="20">
+                        <div class="plant-icon">🌿</div>
+                        <h4>Hortelã</h4>
+                        <p>Temperatura: 50°C</p>
+                        <p>Pressão: 20 Pa</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+</body>
+</html>

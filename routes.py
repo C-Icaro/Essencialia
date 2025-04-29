@@ -9,9 +9,9 @@ import sqlite3  # Importando sqlite3
 def introducao():  # Função que será chamada quando a rota for acessada
     return render_template("introducao01.html")
 
-@app.route("/homepage")  # Rota para a Home Page
-def homepage():
-    return render_template("homepage.html")
+@app.route("/home")  # Rota para a Home Page
+def home():
+    return render_template("home.html")
 
 @app.route("/dashboard")  # Rota para o Dashboard
 def dashboard():
