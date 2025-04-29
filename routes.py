@@ -17,6 +17,10 @@ def homepage():
 def dashboard():
     return render_template("dashboard.html")
 
+@app.route("/biblioteca")  # Rota para a Biblioteca
+def biblioteca():
+    return render_template("biblioteca.html")
+
 @app.route("/mqtt-data")
 def get_mqtt_data():
     return jsonify(mqtt_data)
