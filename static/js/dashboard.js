@@ -241,6 +241,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Função para atualizar o gráfico com dados reais
   function updateRealTemperatureChart(timestamps, temperatures) {
+    console.log('Temperatura:', timestamps, temperatures);
     const canvas = document.getElementById("temperatureChart")
     const ctx = canvas.getContext("2d")
   
@@ -333,6 +334,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Função para atualizar o gráfico de pressão com dados reais
   function updateRealPressureChart(timestamps, pressures) {
+    console.log('Pressão:', timestamps, pressures);
     const canvas = document.getElementById("pressureChart")
     const ctx = canvas.getContext("2d")
   
@@ -643,58 +645,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // Inicializar controles
   function initControls() {
     // Botão de interromper
-    document.getElementById("interruptBtn").addEventListener("click", function () {
-      simulationData.isRunning = !simulationData.isRunning
-      this.innerHTML = simulationData.isRunning
-        ? '<span class="btn-icon">⏸️</span> Interromper'
-        : '<span class="btn-icon">▶️</span> Continuar'
-  
-      // Enviar comando MQTT
-      publishMQTTCommand("process", simulationData.isRunning ? "start" : "stop")
-    })
-  
-    // Controles de temperatura
-    const tempDisplay = document.querySelector(".current-temp")
-    let setTemp = 0
-  
-    document.querySelector(".temp-btn.increase").addEventListener("click", () => {
-      if (setTemp < 100) {
-        setTemp += 5
-        tempDisplay.textContent = `${setTemp} °C`
-  
+    const interruptBtn = document.getElementById("interruptBtn");
+    if (interruptBtn) {
+      interruptBtn.addEventListener("click", function () {
+        simulationData.isRunning = !simulationData.isRunning;
+        this.innerHTML = simulationData.isRunning
+          ? '<span class="btn-icon">⏸️</span> Interromper'
+          : '<span class="btn-icon">▶️</span> Continuar';
         // Enviar comando MQTT
-        publishMQTTCommand("temperature", setTemp)
-      }
-    })
-  
-    document.querySelector(".temp-btn.decrease").addEventListener("click", () => {
-      if (setTemp > 0) {
-        setTemp -= 5
-        tempDisplay.textContent = `${setTemp} °C`
-  
-        // Enviar comando MQTT
-        publishMQTTCommand("temperature", setTemp)
-      }
-    })
-  
-    // Botões de ativar/desativar
-    document.getElementById("activateBtn").addEventListener("click", () => {
-      simulationData.isRunning = true
-      document.getElementById("interruptBtn").innerHTML = '<span class="btn-icon">⏸️</span> Interromper'
-      addAlert("success", "Sistema ativado com sucesso")
-  
-      // Enviar comando MQTT para ativar o servo
-      publishMQTTCommand("servo", "on")
-    })
-  
-    document.getElementById("deactivateBtn").addEventListener("click", () => {
-      simulationData.isRunning = false
-      document.getElementById("interruptBtn").innerHTML = '<span class="btn-icon">▶️</span> Continuar'
-      addAlert("error", "Sistema desativado")
-  
-      // Enviar comando MQTT para desativar o servo
-      publishMQTTCommand("servo", "off")
-    })
+        publishMQTTCommand("process", simulationData.isRunning ? "start" : "stop");
+      });
+    }
   }
   
   // Inicializar alertas
