@@ -48,3 +48,16 @@ def get_temperature_data():
     }
     return jsonify(data)
 
+@app.route("/pressure-data")
+def get_pressure_data():
+    conn = sqlite3.connect("data.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT timestamp, value FROM sensor_data WHERE sensor_type = 'pressure' ORDER BY timestamp ASC")
+    rows = cursor.fetchall()
+    conn.close()
+    data = {
+        "timestamps": [row[0] for row in rows],
+        "pressures": [row[1] for row in rows]
+    }
+    return jsonify(data)
+

@@ -313,17 +313,104 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   
+  // Função para buscar dados históricos de pressão
+  function fetchPressureData() {
+    fetch("/pressure-data")
+      .then((response) => response.json())
+      .then((data) => {
+        // Formatar os timestamps
+        const formattedTimestamps = data.timestamps.map((timestamp) => {
+          const date = new Date(timestamp)
+          return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}:${date.getSeconds().toString().padStart(2, "0")}` // Formato HH:mm:ss
+        })
+        // Atualizar o gráfico de pressão com dados reais
+        updateRealPressureChart(formattedTimestamps, data.pressures)
+      })
+      .catch((error) => {
+        console.error("Erro ao buscar dados do gráfico de pressão:", error)
+      })
+  }
+  
+  // Função para atualizar o gráfico de pressão com dados reais
+  function updateRealPressureChart(timestamps, pressures) {
+    const canvas = document.getElementById("pressureChart")
+    const ctx = canvas.getContext("2d")
+  
+    // Limpar o canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+  
+    // Desenhar linhas de grade
+    const width = canvas.width
+    const height = canvas.height
+  
+    ctx.strokeStyle = "#e0e0e0"
+    ctx.lineWidth = 1
+  
+    // Linhas horizontais
+    for (let i = 0; i <= 4; i++) {
+      const y = height - (height / 4) * i
+      ctx.beginPath()
+      ctx.moveTo(0, y)
+      ctx.lineTo(width, y)
+      ctx.stroke()
+      // Rótulos de pressão
+      ctx.fillStyle = "#666"
+      ctx.font = "12px Inter"
+      ctx.textAlign = "right"
+      ctx.fillText(`${i * 10} kPa`, 30, y - 5)
+    }
+  
+    // Linhas verticais e rótulos de tempo
+    const timeLabels =
+      timestamps.length > 3
+        ? [
+            timestamps[0],
+            timestamps[Math.floor(timestamps.length / 3)],
+            timestamps[Math.floor((timestamps.length * 2) / 3)],
+            timestamps[timestamps.length - 1],
+          ]
+        : timestamps
+  
+    for (let i = 0; i < timeLabels.length; i++) {
+      const x = (width / (timeLabels.length - 1)) * i
+      ctx.beginPath()
+      ctx.moveTo(x, 0)
+      ctx.lineTo(x, height)
+      ctx.stroke()
+      // Rótulos de tempo
+      ctx.fillStyle = "#666"
+      ctx.font = "12px Inter"
+      ctx.textAlign = "center"
+      ctx.fillText(timeLabels[i], x, height - 5)
+    }
+  
+    // Desenhar linha de pressão
+    if (pressures.length > 0) {
+      const maxPressure = Math.max(...pressures, 40) // Garantir que o máximo seja pelo menos 40
+      ctx.beginPath()
+      ctx.moveTo(0, height - (pressures[0] / maxPressure) * height)
+      for (let i = 1; i < pressures.length; i++) {
+        const x = (i / (pressures.length - 1)) * width
+        const y = height - (pressures[i] / maxPressure) * height
+        ctx.lineTo(x, y)
+      }
+      ctx.strokeStyle = "#FF5722" // Cor laranja para diferenciar da temperatura
+      ctx.lineWidth = 2
+      ctx.stroke()
+    }
+  }
+  
   // Iniciar busca de dados
   function startDataFetching() {
     // Atualizar dados MQTT a cada 2 segundos
     setInterval(updateBoardInfo, 2000)
-  
-    // Atualizar gráfico de temperatura a cada 10 segundos
+    // Atualizar gráficos a cada 10 segundos
     setInterval(fetchTemperatureData, 10000)
-  
+    setInterval(fetchPressureData, 10000)
     // Buscar dados iniciais
     updateBoardInfo()
     fetchTemperatureData()
+    fetchPressureData()
   }
   
   // Inicializar o círculo de progresso

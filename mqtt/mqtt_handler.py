@@ -73,10 +73,15 @@ def on_message(client, userdata, msg):
         mqtt_data["nivel"] = payload.get("nivel", "N/A")
         mqtt_data["pressao_kPa"] = f"{payload.get('pressao_kPa', 'N/A')} kPa"
 
-        # Salvar temperatura e pressão no banco de dados
-        save_temperature_to_db(payload.get("temperatura", 0))
-        save_pressure_to_db(payload.get("pressao_kPa", 0))
-        print(f"Dados atualizados: {mqtt_data}")
+        # Salvar temperatura e pressão no banco de dados novo
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        # Supondo que process_id seja None (ou defina o processo ativo se houver)
+        cursor.execute("INSERT INTO sensor_data (process_id, sensor_type, value) VALUES (?, ?, ?)", (None, 'temperature', payload.get("temperatura", 0)))
+        cursor.execute("INSERT INTO sensor_data (process_id, sensor_type, value) VALUES (?, ?, ?)", (None, 'pressure', payload.get("pressao_kPa", 0)))
+        conn.commit()
+        conn.close()
+        print(f"Dados salvos: temperatura={payload.get('temperatura', 0)}, pressao={payload.get('pressao_kPa', 0)}")
     except json.JSONDecodeError:
         print("Erro ao decodificar a mensagem MQTT")
 
