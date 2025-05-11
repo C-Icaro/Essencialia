@@ -15,18 +15,32 @@ DB_FILE = "data.db"
 def init_db():
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
+    # Nova modelagem
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS temperature_data (
+        CREATE TABLE IF NOT EXISTS plant (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-            temperature REAL
+            name TEXT NOT NULL,
+            description TEXT
         )
     """)
     cursor.execute("""
-        CREATE TABLE IF NOT EXISTS pressure_data (
+        CREATE TABLE IF NOT EXISTS process (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            plant_id INTEGER,
+            start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+            end_time DATETIME,
+            operator TEXT,
+            FOREIGN KEY (plant_id) REFERENCES plant(id)
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS sensor_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            process_id INTEGER,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-            pressure REAL
+            sensor_type TEXT,
+            value REAL,
+            FOREIGN KEY (process_id) REFERENCES process(id)
         )
     """)
     conn.commit()
