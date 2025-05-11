@@ -22,6 +22,13 @@ def init_db():
             temperature REAL
         )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS pressure_data (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            pressure REAL
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -29,6 +36,13 @@ def save_temperature_to_db(temperature):
     conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("INSERT INTO temperature_data (temperature) VALUES (?)", (temperature,))
+    conn.commit()
+    conn.close()
+
+def save_pressure_to_db(pressure):
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO pressure_data (pressure) VALUES (?)", (pressure,))
     conn.commit()
     conn.close()
 
@@ -45,8 +59,9 @@ def on_message(client, userdata, msg):
         mqtt_data["nivel"] = payload.get("nivel", "N/A")
         mqtt_data["pressao_kPa"] = f"{payload.get('pressao_kPa', 'N/A')} kPa"
 
-        # Salvar temperatura no banco de dados
+        # Salvar temperatura e pressão no banco de dados
         save_temperature_to_db(payload.get("temperatura", 0))
+        save_pressure_to_db(payload.get("pressao_kPa", 0))
         print(f"Dados atualizados: {mqtt_data}")
     except json.JSONDecodeError:
         print("Erro ao decodificar a mensagem MQTT")

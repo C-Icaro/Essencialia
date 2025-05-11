@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Essenciália - Suporte</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/suporte.css') }}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">🌿</div>
+                <h1>Essenciália</h1>
+            </div>
+            <nav class="nav-menu">
+                <a href="home" class="nav-item">
+                    <span class="nav-icon">🏠</span>
+                    <span class="nav-text">Home</span>
+                    <span class="arrow">›</span>
+                </a>
+                <a href="dashboard" class="nav-item">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                    <span class="arrow">›</span>
+                </a>
+                <a href="historico" class="nav-item">
+                    <span class="nav-icon">📜</span>
+                    <span class="nav-text">Histórico</span>
+                    <span class="arrow">›</span>
+                </a>
+                <a href="biblioteca" class="nav-item">
+                    <span class="nav-icon">📚</span>
+                    <span class="nav-text">Biblioteca</span>
+                    <span class="arrow">›</span>
+                </a>
+                <a href="suporte" class="nav-item active">
+                    <span class="nav-icon">🛟</span>
+                    <span class="nav-text">Suporte</span>
+                    <span class="arrow">›</span>
+                </a>
+            </nav>
+            <button class="new-process-btn">
+                <span>Iniciar novo processo</span>
+                <span class="plus-icon">+</span>
+            </button>
+            <a href="introducao01" class="nav-item logout">
+                <span class="nav-icon">🚪</span>
+                <span class="nav-text">Sair</span>
+                <span class="arrow">›</span>
+            </a>
+        </aside>
+        <!-- Main Content -->
+        <main class="suporte-main">
+            <div class="suporte-header">
+                <div class="suporte-title-block">
+                    <div class="suporte-title">Suporte</div>
+                </div>
+                <div class="suporte-search-bar">
+                    <input type="text" placeholder="Pesquisar">
+                    <span>🔍</span>
+                </div>
+            </div>
+            <div class="suporte-content">
+                <div class="suporte-box">
+                    <h2>Contato dos Desenvolvedores</h2>
+                    <div class="dev-contact">
+                        <strong>Nome:</strong> João Silva<br>
+                        <strong>E-mail:</strong> joao.silva@email.com<br>
+                        <strong>Telefone:</strong> (92) 91234-5678
+                    </div>
+                    <div class="dev-contact">
+                        <strong>Nome:</strong> Maria Oliveira<br>
+                        <strong>E-mail:</strong> maria.oliveira@email.com<br>
+                        <strong>Telefone:</strong> (92) 99876-5432
+                    </div>
+                    <div class="dev-contact">
+                        <strong>Nome:</strong> Maria Oliveira<br>
+                        <strong>E-mail:</strong> maria.oliveira@email.com<br>
+                        <strong>Telefone:</strong> (92) 99876-5432
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="{{ url_for('static', filename='js/suporte.js') }}"></script>
+</body>
+</html> 
