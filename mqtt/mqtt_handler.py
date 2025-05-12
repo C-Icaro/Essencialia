@@ -43,6 +43,18 @@ def init_db():
             FOREIGN KEY (process_id) REFERENCES process(id)
         )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS alerts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            process_id INTEGER,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            alert_type TEXT NOT NULL,
+            message TEXT NOT NULL,
+            is_resolved BOOLEAN DEFAULT 0,
+            resolved_at DATETIME,
+            FOREIGN KEY (process_id) REFERENCES process(id)
+        )
+    """)
     conn.commit()
     conn.close()
 
@@ -68,15 +80,43 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     global mqtt_data
     try:
+        # Verificar se é um tópico de alerta
+        if msg.topic == "essencialia/alertas":
+            # Salvar alerta no banco de dados
+            conn = sqlite3.connect(DB_FILE)
+            cursor = conn.cursor()
+            
+            # Determinar o tipo de alerta baseado na mensagem
+            alert_type = "info"
+            message = msg.payload.decode()
+            
+            if "temperatura" in message.lower():
+                alert_type = "temperature"
+            elif "pressao" in message.lower():
+                alert_type = "pressure"
+            elif "nivel" in message.lower():
+                alert_type = "water_level"
+            
+            # Inserir alerta
+            cursor.execute("""
+                INSERT INTO alerts (process_id, alert_type, message)
+                VALUES (?, ?, ?)
+            """, (None, alert_type, message))
+            
+            conn.commit()
+            conn.close()
+            print(f"Alerta salvo: {message}")
+            return
+
+        # Processar dados normais dos sensores
         payload = json.loads(msg.payload.decode())
         mqtt_data["temperatura"] = f"{payload.get('temperatura', 'N/A')} °C"
         mqtt_data["nivel"] = payload.get("nivel", "N/A")
         mqtt_data["pressao_kPa"] = f"{payload.get('pressao_kPa', 'N/A')} kPa"
 
-        # Salvar temperatura e pressão no banco de dados novo
+        # Salvar temperatura e pressão no banco de dados
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
-        # Supondo que process_id seja None (ou defina o processo ativo se houver)
         cursor.execute("INSERT INTO sensor_data (process_id, sensor_type, value) VALUES (?, ?, ?)", (None, 'temperature', payload.get("temperatura", 0)))
         cursor.execute("INSERT INTO sensor_data (process_id, sensor_type, value) VALUES (?, ?, ?)", (None, 'pressure', payload.get("pressao_kPa", 0)))
         conn.commit()
@@ -84,6 +124,8 @@ def on_message(client, userdata, msg):
         print(f"Dados salvos: temperatura={payload.get('temperatura', 0)}, pressao={payload.get('pressao_kPa', 0)}")
     except json.JSONDecodeError:
         print("Erro ao decodificar a mensagem MQTT")
+    except Exception as e:
+        print(f"Erro ao processar mensagem MQTT: {str(e)}")
 
 def start_mqtt(broker_host, broker_port):
     init_db()  # Inicializa o banco de dados

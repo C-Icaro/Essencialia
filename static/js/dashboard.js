@@ -402,6 +402,232 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   
+  // Inicializar alertas
+  function initAlerts() {
+    // Adicionar evento para fechar alertas
+    document.querySelectorAll(".close-alert").forEach((button) => {
+        button.addEventListener("click", function () {
+            const alertElement = this.parentElement;
+            const alertId = alertElement.dataset.alertId;
+            if (alertId) {
+                // Marcar alerta como resolvido no banco de dados
+                fetch(`/alerts/resolve/${alertId}`, {
+                    method: 'POST'
+                }).then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alertElement.style.display = "none";
+                    }
+                })
+                .catch(error => console.error('Erro ao resolver alerta:', error));
+            } else {
+                alertElement.style.display = "none";
+            }
+        });
+    });
+
+    // Buscar alertas iniciais
+    fetchAlerts();
+  }
+  
+  // Função para buscar alertas do servidor
+  function fetchAlerts() {
+    fetch("/alerts")
+        .then(response => response.json())
+        .then(alerts => {
+            const alertList = document.querySelector(".alert-list");
+            // Limpar alertas existentes
+            alertList.innerHTML = "";
+            
+            if (alerts.length === 0) {
+                const noAlerts = document.createElement("div");
+                noAlerts.className = "alert info";
+                noAlerts.innerHTML = `
+                    <span class="alert-icon">ℹ️</span>
+                    <span class="alert-text">Nenhum alerta ativo</span>
+                `;
+                alertList.appendChild(noAlerts);
+                return;
+            }
+
+            // Adicionar cada alerta
+            alerts.forEach(alert => {
+                const alertElement = document.createElement("div");
+                alertElement.className = `alert ${getAlertClass(alert.type)}`;
+                alertElement.dataset.alertId = alert.id;
+
+                let icon = "⚠️";
+                if (alert.type === "success") icon = "✅";
+                else if (alert.type === "info") icon = "ℹ️";
+
+                alertElement.innerHTML = `
+                    <span class="alert-icon">${icon}</span>
+                    <span class="alert-text">${alert.message}</span>
+                    <span class="alert-time">${formatAlertTime(alert.timestamp)}</span>
+                    <button class="close-alert">×</button>
+                `;
+
+                // Adicionar evento para fechar
+                alertElement.querySelector(".close-alert").addEventListener("click", () => {
+                    fetch(`/alerts/resolve/${alert.id}`, {
+                        method: 'POST'
+                    }).then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            alertElement.style.display = "none";
+                        }
+                    })
+                    .catch(error => console.error('Erro ao resolver alerta:', error));
+                });
+
+                alertList.appendChild(alertElement);
+            });
+        })
+        .catch(error => console.error('Erro ao buscar alertas:', error));
+  }
+  
+  // Função para determinar a classe CSS do alerta
+  function getAlertClass(type) {
+    switch (type) {
+        case 'temperature':
+            return 'error';
+        case 'pressure':
+            return 'error';
+        case 'water_level':
+            return 'error';
+        case 'success':
+            return 'success';
+        default:
+            return 'info';
+    }
+  }
+  
+  // Função para formatar o timestamp do alerta
+  function formatAlertTime(timestamp) {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    
+    // Se for menos de 1 minuto
+    if (diff < 60000) {
+        return 'Agora mesmo';
+    }
+    // Se for menos de 1 hora
+    if (diff < 3600000) {
+        const minutes = Math.floor(diff / 60000);
+        return `${minutes} minuto${minutes > 1 ? 's' : ''} atrás`;
+    }
+    // Se for menos de 24 horas
+    if (diff < 86400000) {
+        const hours = Math.floor(diff / 3600000);
+        return `${hours} hora${hours > 1 ? 's' : ''} atrás`;
+    }
+    // Se for mais de 24 horas, mostrar data e hora
+    return date.toLocaleString();
+  }
+  
+  // Função para adicionar um novo alerta
+  function addAlert(type, message) {
+    const alertList = document.querySelector(".alert-list");
+    const alertElement = document.createElement("div");
+    alertElement.className = `alert ${type}`;
+
+    let icon = "⚠️";
+    if (type === "success") icon = "✅";
+    else if (type === "info") icon = "ℹ️";
+
+    alertElement.innerHTML = `
+        <span class="alert-icon">${icon}</span>
+        <span class="alert-text">${message}</span>
+        <span class="alert-time">Agora mesmo</span>
+        <button class="close-alert">×</button>
+    `;
+
+    // Adicionar evento para fechar
+    alertElement.querySelector(".close-alert").addEventListener("click", () => {
+        alertElement.style.display = "none";
+    });
+
+    // Adicionar ao topo da lista
+    alertList.prepend(alertElement);
+
+    // Auto-remover após 5 segundos (apenas para alertas temporários)
+    if (!alertElement.dataset.alertId) {
+        setTimeout(() => {
+            alertElement.style.opacity = "0";
+            alertElement.style.transition = "opacity 0.5s";
+            setTimeout(() => alertElement.remove(), 500);
+        }, 5000);
+    }
+  }
+  
+  // Função para formatar tempo (segundos para HH:MM:SS)
+  function formatTime(seconds) {
+    const h = Math.floor(seconds / 3600)
+    const m = Math.floor((seconds % 3600) / 60)
+    const s = seconds % 60
+  
+    return [h, m, s].map((v) => (v < 10 ? "0" + v : v)).join(":")
+  }
+  
+  // Iniciar simulação
+  function startSimulation() {
+    // Atualizar a cada segundo
+    setInterval(() => {
+      // Não atualizar se estivermos usando dados reais
+      if (simulationData.useRealData) return
+  
+      if (!simulationData.isRunning) return
+  
+      // Atualizar tempo restante
+      simulationData.timeRemaining = Math.max(0, simulationData.timeRemaining - 1)
+      document.querySelector(".time-display").textContent = formatTime(simulationData.timeRemaining)
+  
+      // Calcular progresso
+      simulationData.progress = 100 - (simulationData.timeRemaining / 3600) * 100
+      window.updateProgressCircle(simulationData.progress)
+  
+      // Simular aumento de temperatura
+      simulationData.temperature = Math.min(100, simulationData.temperature + 0.2)
+      document.querySelector(".temp-value").textContent = `${Math.floor(simulationData.temperature)} °C`
+      window.updateTemperatureChart(simulationData.temperature)
+  
+      // Simular flutuação de pressão
+      const pressureChange = (Math.random() - 0.5) * 5
+      simulationData.pressure = Math.max(0, Math.min(100, simulationData.pressure + pressureChange))
+      window.updatePressureGauge(simulationData.pressure)
+  
+      // Simular flutuação de nível de água
+      const levelChange = (Math.random() - 0.5) * 2
+      simulationData.waterLevel = Math.max(0, Math.min(100, simulationData.waterLevel + levelChange))
+      window.updateWaterLevel(simulationData.waterLevel)
+  
+      // Gerar alertas aleatórios
+      if (Math.random() < 0.01) {
+        const types = ["error", "success", "info"]
+        const messages = [
+          "Temperatura acima do limite",
+          "Pressão normalizada",
+          "Nível de água baixo",
+          "Sistema funcionando normalmente",
+          "Verificação de rotina concluída",
+        ]
+  
+        const type = types[Math.floor(Math.random() * types.length)]
+        const message = messages[Math.floor(Math.random() * messages.length)]
+  
+        addAlert(type, message)
+      }
+  
+      // Verificar fim do processo
+      if (simulationData.timeRemaining === 0) {
+        addAlert("success", "Processo concluído com sucesso!")
+        simulationData.isRunning = false
+        document.getElementById("interruptBtn").innerHTML = '<span class="btn-icon">▶️</span> Reiniciar'
+      }
+    }, 1000)
+  }
+  
   // Iniciar busca de dados
   function startDataFetching() {
     // Atualizar dados MQTT a cada 2 segundos
@@ -409,10 +635,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // Atualizar gráficos a cada 10 segundos
     setInterval(fetchTemperatureData, 10000)
     setInterval(fetchPressureData, 10000)
+    // Atualizar alertas a cada 5 segundos
+    setInterval(fetchAlerts, 5000)
     // Buscar dados iniciais
     updateBoardInfo()
     fetchTemperatureData()
     fetchPressureData()
+    fetchAlerts()
   }
   
   // Inicializar o círculo de progresso
@@ -656,114 +885,5 @@ document.addEventListener("DOMContentLoaded", () => {
         publishMQTTCommand("process", simulationData.isRunning ? "start" : "stop");
       });
     }
-  }
-  
-  // Inicializar alertas
-  function initAlerts() {
-    // Adicionar evento para fechar alertas
-    document.querySelectorAll(".close-alert").forEach((button) => {
-      button.addEventListener("click", function () {
-        this.parentElement.style.display = "none"
-      })
-    })
-  }
-  
-  // Função para adicionar um novo alerta
-  function addAlert(type, message) {
-    const alertList = document.querySelector(".alert-list")
-    const alertElement = document.createElement("div")
-    alertElement.className = `alert ${type}`
-  
-    let icon = "⚠️"
-    if (type === "success") icon = "✅"
-    else if (type === "info") icon = "ℹ️"
-  
-    alertElement.innerHTML = `
-          <span class="alert-icon">${icon}</span>
-          <span class="alert-text">${message}</span>
-          <button class="close-alert">×</button>
-      `
-  
-    // Adicionar evento para fechar
-    alertElement.querySelector(".close-alert").addEventListener("click", () => {
-      alertElement.style.display = "none"
-    })
-  
-    // Adicionar ao topo da lista
-    alertList.prepend(alertElement)
-  
-    // Auto-remover após 5 segundos
-    setTimeout(() => {
-      alertElement.style.opacity = "0"
-      alertElement.style.transition = "opacity 0.5s"
-      setTimeout(() => alertElement.remove(), 500)
-    }, 5000)
-  }
-  
-  // Função para formatar tempo (segundos para HH:MM:SS)
-  function formatTime(seconds) {
-    const h = Math.floor(seconds / 3600)
-    const m = Math.floor((seconds % 3600) / 60)
-    const s = seconds % 60
-  
-    return [h, m, s].map((v) => (v < 10 ? "0" + v : v)).join(":")
-  }
-  
-  // Iniciar simulação
-  function startSimulation() {
-    // Atualizar a cada segundo
-    setInterval(() => {
-      // Não atualizar se estivermos usando dados reais
-      if (simulationData.useRealData) return
-  
-      if (!simulationData.isRunning) return
-  
-      // Atualizar tempo restante
-      simulationData.timeRemaining = Math.max(0, simulationData.timeRemaining - 1)
-      document.querySelector(".time-display").textContent = formatTime(simulationData.timeRemaining)
-  
-      // Calcular progresso
-      simulationData.progress = 100 - (simulationData.timeRemaining / 3600) * 100
-      window.updateProgressCircle(simulationData.progress)
-  
-      // Simular aumento de temperatura
-      simulationData.temperature = Math.min(100, simulationData.temperature + 0.2)
-      document.querySelector(".temp-value").textContent = `${Math.floor(simulationData.temperature)} °C`
-      window.updateTemperatureChart(simulationData.temperature)
-  
-      // Simular flutuação de pressão
-      const pressureChange = (Math.random() - 0.5) * 5
-      simulationData.pressure = Math.max(0, Math.min(100, simulationData.pressure + pressureChange))
-      window.updatePressureGauge(simulationData.pressure)
-  
-      // Simular flutuação de nível de água
-      const levelChange = (Math.random() - 0.5) * 2
-      simulationData.waterLevel = Math.max(0, Math.min(100, simulationData.waterLevel + levelChange))
-      window.updateWaterLevel(simulationData.waterLevel)
-  
-      // Gerar alertas aleatórios
-      if (Math.random() < 0.01) {
-        const types = ["error", "success", "info"]
-        const messages = [
-          "Temperatura acima do limite",
-          "Pressão normalizada",
-          "Nível de água baixo",
-          "Sistema funcionando normalmente",
-          "Verificação de rotina concluída",
-        ]
-  
-        const type = types[Math.floor(Math.random() * types.length)]
-        const message = messages[Math.floor(Math.random() * messages.length)]
-  
-        addAlert(type, message)
-      }
-  
-      // Verificar fim do processo
-      if (simulationData.timeRemaining === 0) {
-        addAlert("success", "Processo concluído com sucesso!")
-        simulationData.isRunning = false
-        document.getElementById("interruptBtn").innerHTML = '<span class="btn-icon">▶️</span> Reiniciar'
-      }
-    }, 1000)
   }
   

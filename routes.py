@@ -61,3 +61,41 @@ def get_pressure_data():
     }
     return jsonify(data)
 
+@app.route("/alerts")
+def get_alerts():
+    conn = sqlite3.connect("data.db")
+    cursor = conn.cursor()
+    # Buscar os últimos 10 alertas não resolvidos
+    cursor.execute("""
+        SELECT id, timestamp, alert_type, message, is_resolved 
+        FROM alerts 
+        WHERE is_resolved = 0 
+        ORDER BY timestamp DESC 
+        LIMIT 10
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    
+    alerts = [{
+        "id": row[0],
+        "timestamp": row[1],
+        "type": row[2],
+        "message": row[3],
+        "is_resolved": bool(row[4])
+    } for row in rows]
+    
+    return jsonify(alerts)
+
+@app.route("/alerts/resolve/<int:alert_id>", methods=["POST"])
+def resolve_alert(alert_id):
+    conn = sqlite3.connect("data.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE alerts 
+        SET is_resolved = 1, resolved_at = CURRENT_TIMESTAMP 
+        WHERE id = ?
+    """, (alert_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"success": True})
+
