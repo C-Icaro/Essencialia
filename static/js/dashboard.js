@@ -819,4 +819,67 @@ alerts.render = function(alertsArr) {
     if (!alertList) return;
     alertList.innerHTML = '';
     alertsArr.forEach(alert => this.createAlertElement(alert, alertList));
-}; 
+};
+
+// Função para desenhar o contador circular de tempo restante
+window.updateProgressCircle = function(percent) {
+    const canvas = document.getElementById('progressCircle');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = 65;
+    // Fundo
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#eee';
+    ctx.lineWidth = 14;
+    ctx.stroke();
+    // Arco de progresso
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, -Math.PI/2, -Math.PI/2 + 2 * Math.PI * percent / 100, false);
+    ctx.strokeStyle = '#4FCB98';
+    ctx.lineWidth = 14;
+    ctx.stroke();
+};
+
+// Atualiza o contador circular e o tempo restante
+function startCircularCountdown(durationSec) {
+    let remaining = durationSec;
+    const timeDisplay = document.querySelector('.time-display');
+    const progressText = document.querySelector('.progress-text');
+    if (!timeDisplay) return;
+    if (window._countdownInterval) clearInterval(window._countdownInterval);
+    function update() {
+        const percent = 100 * (remaining / durationSec);
+        const h = Math.floor(remaining / 3600);
+        const m = Math.floor((remaining % 3600) / 60);
+        const s = remaining % 60;
+        const timeStr = [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
+        timeDisplay.textContent = timeStr;
+        progressText.textContent = `${Math.round(percent)}%`;
+        window.updateProgressCircle(percent);
+        if (remaining <= 0) {
+            clearInterval(window._countdownInterval);
+        } else {
+            remaining--;
+        }
+    }
+    update();
+    window._countdownInterval = setInterval(update, 1000);
+}
+
+// Escuta evento customizado do novo processo para iniciar o contador
+window.addEventListener('novoProcessoIniciado', function(e) {
+    let duracao = e.detail.duracao;
+    // Extrai número de minutos do texto (ex: '44 minutos')
+    let minutos = 0;
+    if (duracao) {
+        const match = duracao.match(/(\d+)/);
+        if (match) minutos = parseInt(match[1], 10);
+    }
+    if (minutos > 0) {
+        startCircularCountdown(minutos * 60);
+    }
+}); 
