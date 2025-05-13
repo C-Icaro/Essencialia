@@ -1,0 +1,55 @@
+<!-- components/novo_processo_modal.html -->
+<div id="novo-processo-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h2>Novo processo</h2>
+      <form id="novo-processo-form">
+        <label>Selecionar planta</label>
+        <select name="planta" required>
+          <option value="hortela">Hortelã</option>
+          <!-- Outras plantas podem ser adicionadas aqui -->
+        </select>
+  
+        <label>Inserir quantidade de matéria-prima</label>
+        <div class="input-group">
+          <input type="number" name="quantidade" min="1" placeholder="01" required class="input-grama">
+          <span class="input-suffix">g</span>
+        </div>
+  
+        <label>Parte utilizada</label>
+        <select name="parte" required>
+          <option value="flor">Flor</option>
+          <option value="folha">Folha</option>
+          <option value="caule">Caule</option>
+          <option value="casca">Casca</option>
+        </select>
+  
+        <div style="display: flex; gap: 10px;">
+          <div style="flex:1;">
+            <label>Temperatura mínima</label>
+            <div class="input-group">
+              <input type="number" name="temp_min" value="95" readonly class="input-temp">
+              <span class="input-suffix">°C</span>
+            </div>
+          </div>
+          <div style="flex:1;">
+            <label>Temperatura máxima</label>
+            <div class="input-group">
+              <input type="number" name="temp_max" value="100" readonly class="input-temp">
+              <span class="input-suffix">°C</span>
+            </div>
+          </div>
+        </div>
+  
+        <label>Duração estimada</label>
+        <input type="text" id="duracao-estimada" readonly value="20 minutos" style="margin-bottom: 0;">
+        <small style="color:#888; font-size:0.95em;">
+          Cálculo: 0,12 x massa (gramas) + 20 &nbsp; (*esse cálculo só serve pra folhas finas parecidas com a hortelã)
+        </small>
+  
+        <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+          <button type="button" class="cancelar-btn">Cancelar</button>
+          <button type="submit" class="iniciar-btn">Iniciar</button>
+        </div>
+      </form>
+    </div>
+  </div>

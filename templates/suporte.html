@@ -6,6 +6,7 @@
     <title>Essenciália - Suporte</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/suporte.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/novo_processo_modal.css') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
 </head>
 <body>
@@ -86,6 +87,8 @@
             </div>
         </main>
     </div>
+    {% include 'components/novo_processo_modal.html' %}
+    <script src="{{ url_for('static', filename='js/novo_processo_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/suporte.js') }}"></script>
 </body>
 </html> 

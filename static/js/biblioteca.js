@@ -1,46 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
-    initPlantSelection();
     initSearch();
 });
 
-// Inicializar seleção de plantas
-function initPlantSelection() {
-    // Abrir modal ao clicar no botão "Iniciar novo processo"
-    document.querySelector(".new-process-btn").addEventListener("click", () => {
-        document.getElementById("plantSelectionModal").style.display = "block";
-    });
-
-    // Fechar modal ao clicar no X
-    document.querySelector(".close-modal").addEventListener("click", () => {
-        document.getElementById("plantSelectionModal").style.display = "none";
-    });
-
-    // Fechar modal ao clicar fora dele
-    window.addEventListener("click", (event) => {
-        if (event.target === document.getElementById("plantSelectionModal")) {
-            document.getElementById("plantSelectionModal").style.display = "none";
-        }
-    });
-
-    // Adicionar evento de clique aos cards de plantas
-    document.querySelectorAll(".plant-card").forEach(card => {
-        card.addEventListener("click", () => {
-            // Remover seleção anterior
-            document.querySelectorAll(".plant-card").forEach(c => c.classList.remove("selected"));
-            
-            // Adicionar seleção ao card clicado
-            card.classList.add("selected");
-            
-            // Obter dados da planta
-            const plantId = card.dataset.plant;
-            
-            // Redirecionar para o dashboard com a planta selecionada
-            setTimeout(() => {
-                window.location.href = `dashboard?plant=${plantId}`;
-            }, 500);
-        });
-    });
-}
 
 // Inicializar funcionalidade de pesquisa
 function initSearch() {

@@ -15,7 +15,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initWaterLevel()
     initControls()
     initAlerts()
-    initPlantSelection()
 
     startDataFetching()
 
@@ -66,39 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   }
 
-  function initPlantSelection() {
-    document.querySelector(".new-process-btn").addEventListener("click", () => {
-      document.getElementById("plantSelectionModal").style.display = "block"
-    })
-
-    document.querySelector(".close-modal").addEventListener("click", () => {
-      document.getElementById("plantSelectionModal").style.display = "none"
-    })
-
-    window.addEventListener("click", (event) => {
-      if (event.target === document.getElementById("plantSelectionModal")) {
-        document.getElementById("plantSelectionModal").style.display = "none"
-      }
-    })
-
-    document.querySelectorAll(".plant-card").forEach((card) => {
-      card.addEventListener("click", () => {
-        document.querySelectorAll(".plant-card").forEach((c) => c.classList.remove("selected"))
-
-        card.classList.add("selected")
-
-        const plantId = card.dataset.plant
-        const plantTemp = Number.parseInt(card.dataset.temp)
-        const plantPressure = Number.parseInt(card.dataset.pressure)
-
-        selectPlant(plantId, plantTemp, plantPressure)
-
-        setTimeout(() => {
-          document.getElementById("plantSelectionModal").style.display = "none"
-        }, 500)
-      })
-    })
-  }
 
   function selectPlant(plantId, recommendedTemp, recommendedPressure) {
     simulationData.currentPlant = plantId

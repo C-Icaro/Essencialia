@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/novo_processo_modal.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/dist/date-fns.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/dist/locale/pt-BR.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.1/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -206,49 +207,8 @@
         </main>
     </div>
     
-    <!-- Modal de Seleção de Plantas -->
-    <div class="modal" id="plantSelectionModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Selecione a Planta</h3>
-                <span class="close-modal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="plant-grid">
-                    <div class="plant-card" data-plant="lavanda" data-temp="60" data-pressure="25">
-                        <div class="plant-icon">🌿</div>
-                        <h4>Lavanda</h4>
-                        <p>Temperatura: 60°C</p>
-                        <p>Pressão: 25 Pa</p>
-                    </div>
-                    <div class="plant-card" data-plant="eucalipto" data-temp="70" data-pressure="30">
-                        <div class="plant-icon">🌱</div>
-                        <h4>Eucalipto</h4>
-                        <p>Temperatura: 70°C</p>
-                        <p>Pressão: 30 Pa</p>
-                    </div>
-                    <div class="plant-card" data-plant="alecrim" data-temp="65" data-pressure="28">
-                        <div class="plant-icon">🌿</div>
-                        <h4>Alecrim</h4>
-                        <p>Temperatura: 65°C</p>
-                        <p>Pressão: 28 Pa</p>
-                    </div>
-                    <div class="plant-card" data-plant="manjericao" data-temp="55" data-pressure="22">
-                        <div class="plant-icon">🌱</div>
-                        <h4>Manjericão</h4>
-                        <p>Temperatura: 55°C</p>
-                        <p>Pressão: 22 Pa</p>
-                    </div>
-                    <div class="plant-card" data-plant="hortela" data-temp="50" data-pressure="20">
-                        <div class="plant-icon">🌿</div>
-                        <h4>Hortelã</h4>
-                        <p>Temperatura: 50°C</p>
-                        <p>Pressão: 20 Pa</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    {% include 'components/novo_processo_modal.html' %}
+    <script src="{{ url_for('static', filename='js/novo_processo_modal.js') }}"></script>
     
     <script type="module" src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
