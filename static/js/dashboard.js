@@ -111,6 +111,8 @@ const utils = {
 
 // Gerenciamento de Alertas
 const alerts = {
+    localAlerts: new Map(), // Armazena alertas locais que não devem ser sobrescritos
+
     async fetch() {
         try {
             const response = await utils.fetchWithTimeout('/alerts');
@@ -126,22 +128,50 @@ const alerts = {
         const alertList = document.querySelector('.alert-list');
         if (!alertList) return;
 
-        alertList.innerHTML = '';
-        alerts.forEach(alert => this.createAlertElement(alert, alertList));
+        // Limpa apenas os alertas do servidor, mantendo os locais
+        const serverAlerts = Array.from(alertList.querySelectorAll('.alert:not([data-local="true"])'));
+        serverAlerts.forEach(alert => alert.remove());
+
+        // Adiciona os novos alertas do servidor
+        alerts.forEach(alert => {
+            // Não sobrescreve alertas locais
+            if (!this.localAlerts.has(alert.id)) {
+                this.createAlertElement(alert, alertList);
+            }
+        });
+
+        // Garante que os alertas locais permaneçam visíveis
+        this.localAlerts.forEach((alertData, alertId) => {
+            if (!alertList.querySelector(`[data-alert-id="${alertId}"]`)) {
+                this.createAlertElement(alertData, alertList, true);
+            }
+        });
     },
 
-    createAlertElement(alert, container) {
+    createAlertElement(alert, container, isLocal = false) {
         const alertElement = document.createElement('div');
         alertElement.className = `alert ${alert.type}`;
+        if (isLocal) {
+            alertElement.dataset.local = 'true';
+        }
+        if (alert.id) {
+            alertElement.dataset.alertId = alert.id;
+        }
+        
         const icon = this.getAlertIcon(alert.type);
         alertElement.innerHTML = `
             <div class="alert-header">
                 <span class="alert-icon">${icon}</span>
+                <span class="alert-text">${alert.message}</span>
+                <button class="close-alert">×</button>
             </div>
-            <div class='alert-details'>${alert.message}</div>
-            <button class="close-alert">×</button>
+            ${alert.data ? `<div class="alert-details">${this.formatAlertDetails(alert.type, alert.data)}</div>` : ''}
+            <div class="alert-footer">
+                <span class="alert-time">${alert.timestamp || 'Agora mesmo'}</span>
+            </div>
         `;
-        this.setupAlertInteractions(alertElement, alert);
+
+        this.setupAlertInteractions(alertElement, alert, isLocal);
         container.appendChild(alertElement);
     },
 
@@ -174,61 +204,53 @@ const alerts = {
         `;
     },
 
-    setupAlertInteractions(element, alert) {
+    setupAlertInteractions(element, alert, isLocal = false) {
         const closeBtn = element.querySelector('.close-alert');
-        if (closeBtn && alert && alert.id) {
+        if (closeBtn) {
             closeBtn.addEventListener('click', async () => {
-                try {
-                    const response = await fetch(`/alerts/resolve/${alert.id}`, {
-                        method: 'POST'
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        element.style.display = 'none';
+                if (isLocal) {
+                    // Remove apenas do DOM se for local
+                    element.remove();
+                    if (alert.id) {
+                        this.localAlerts.delete(alert.id);
                     }
-                } catch (error) {
-                    console.error('Erro ao resolver alerta:', error);
+                } else if (alert.id) {
+                    // Marca como resolvido no servidor se não for local
+                    try {
+                        const response = await fetch(`/alerts/resolve/${alert.id}`, {
+                            method: 'POST'
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            element.remove();
+                        }
+                    } catch (error) {
+                        console.error('Erro ao resolver alerta:', error);
+                    }
                 }
-            });
-        } else if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                element.style.display = 'none';
             });
         }
     },
 
-    add(type, message, data = null) {
+    add(type, message, data = null, isLocal = false) {
         const alertList = document.querySelector('.alert-list');
         if (!alertList) return;
 
-        const alertElement = document.createElement('div');
-        alertElement.className = `alert ${type}`;
-        
-        const icon = this.getAlertIcon(type);
-        const details = this.formatAlertDetails(type, data);
-        
-        alertElement.innerHTML = `
-            <div class="alert-header">
-                <span class="alert-icon">${icon}</span>
-                <span class="alert-text">${message}</span>
-                <button class="close-alert">×</button>
-            </div>
-            ${details}
-            <div class="alert-footer">
-                <span class="alert-time">Agora mesmo</span>
-            </div>
-        `;
+        const alertData = {
+            type,
+            message,
+            data,
+            timestamp: new Date().toISOString()
+        };
 
-        this.setupAlertInteractions(alertElement);
-        alertList.prepend(alertElement);
-
-        if (!alertElement.dataset.alertId) {
-            setTimeout(() => {
-                alertElement.style.opacity = '0';
-                alertElement.style.transition = 'opacity 0.5s';
-                setTimeout(() => alertElement.remove(), 500);
-            }, 5000);
+        if (isLocal) {
+            // Gera um ID temporário para alertas locais
+            const tempId = 'local_' + Date.now();
+            alertData.id = tempId;
+            this.localAlerts.set(tempId, alertData);
         }
+
+        this.createAlertElement(alertData, alertList, isLocal);
     },
 
     formatAlertDetails(type, data) {
@@ -284,6 +306,9 @@ const alerts = {
         return templates[type] || '';
     }
 };
+
+// Expor alerts para o escopo global
+window.alerts = alerts;
 
 // Gerenciamento de Gráficos
 const charts = {
@@ -882,4 +907,116 @@ window.addEventListener('novoProcessoIniciado', function(e) {
     if (minutos > 0) {
         startCircularCountdown(minutos * 60);
     }
-}); 
+});
+
+// Adicionar handler para o modal de produção
+document.addEventListener('DOMContentLoaded', function() {
+    const producaoForm = document.getElementById('producao-form');
+    const volumeInput = document.querySelector('input[name="volume_extraido"]');
+    const rendimentoInput = document.getElementById('rendimento-extracao');
+    const quantidadeOriginal = document.querySelector('.material-input')?.value;
+
+    if (producaoForm && volumeInput && rendimentoInput) {
+        // Calcular rendimento quando o volume é alterado
+        volumeInput.addEventListener('input', function() {
+            const volume = parseFloat(this.value) || 0;
+            const quantidade = parseFloat(quantidadeOriginal?.match(/(\d+)/)?.[1] || 0);
+            
+            if (quantidade > 0) {
+                const rendimento = (volume / quantidade) * 100;
+                rendimentoInput.value = rendimento.toFixed(2) + '%';
+            } else {
+                rendimentoInput.value = '';
+            }
+        });
+
+        // Handler para submissão do formulário
+        producaoForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!window.currentProcessId) {
+                alert('Erro: ID do processo não encontrado');
+                return;
+            }
+
+            try {
+                const formData = {
+                    volume_extraido: parseFloat(volumeInput.value),
+                    rendimento: parseFloat(rendimentoInput.value),
+                    notas_operador: document.querySelector('textarea[name="notas_operador"]').value
+                };
+
+                const response = await fetch(`/api/process/${window.currentProcessId}/finish`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('producao-modal').style.display = 'none';
+                    alert('Processo finalizado com sucesso!');
+                    // Limpar o ID do processo atual
+                    window.currentProcessId = null;
+                    // Recarregar a página para atualizar o estado
+                    window.location.reload();
+                } else {
+                    throw new Error(result.error || 'Erro ao finalizar processo');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao finalizar processo: ' + error.message);
+            }
+        });
+    }
+});
+
+// Função global para verificar processo em andamento
+window.verificarProcessoEmAndamento = async function() {
+    console.log('Verificando processo em andamento...');
+    try {
+        const response = await fetch('/api/process');
+        const result = await response.json();
+        
+        if (result.success) {
+            const processoEmAndamento = result.processes.find(p => p.status === 'em andamento');
+            if (processoEmAndamento) {
+                console.log('Processo em andamento encontrado:', processoEmAndamento);
+                // Aguarda um pequeno delay para garantir que o sistema de alertas esteja disponível
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
+                if (window.alerts) {
+                    await window.alerts.add(
+                        `Já existe um processo em andamento: ${processoEmAndamento.planta} (${processoEmAndamento.quantidade_materia_prima}g)`,
+                        'error',
+                        null,
+                        true
+                    );
+                } else {
+                    console.error('Sistema de alertas não disponível');
+                }
+                return true;
+            }
+        }
+        return false;
+    } catch (error) {
+        console.error('Erro ao verificar processo em andamento:', error);
+        // Aguarda um pequeno delay para garantir que o sistema de alertas esteja disponível
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        if (window.alerts) {
+            await window.alerts.add(
+                'Erro ao verificar processo em andamento. Por favor, tente novamente.',
+                'error',
+                null,
+                true
+            );
+        } else {
+            console.error('Sistema de alertas não disponível');
+        }
+        return true; // Em caso de erro, impede a abertura do modal por segurança
+    }
+}; 
