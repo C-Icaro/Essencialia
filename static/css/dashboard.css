@@ -541,11 +541,12 @@ section h3 {
     padding: 12px;
     border-radius: 6px;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     position: relative;
     background-color: #fff;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
+    margin-bottom: 10px;
 }
 
 .alert:hover {
@@ -553,9 +554,52 @@ section h3 {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
+.alert-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.alert-footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+    font-size: 0.8em;
+    color: #666;
+}
+
+.alert-details {
+    background-color: rgba(0, 0, 0, 0.03);
+    border-radius: 4px;
+    padding: 8px;
+    margin: 4px 0;
+}
+
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 4px 0;
+    font-size: 0.9em;
+}
+
+.detail-label {
+    color: #666;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #333;
+    font-weight: 600;
+}
+
 .alert.error {
     background-color: rgba(244, 67, 54, 0.1);
     border-left: 4px solid var(--error-color);
+}
+
+.alert.error .alert-details {
+    background-color: rgba(244, 67, 54, 0.05);
 }
 
 .alert.success {
@@ -563,9 +607,17 @@ section h3 {
     border-left: 4px solid var(--success-color);
 }
 
+.alert.success .alert-details {
+    background-color: rgba(76, 175, 80, 0.05);
+}
+
 .alert.info {
     background-color: rgba(33, 150, 243, 0.1);
     border-left: 4px solid var(--info-color);
+}
+
+.alert.info .alert-details {
+    background-color: rgba(33, 150, 243, 0.05);
 }
 
 .alert-icon {
@@ -577,20 +629,19 @@ section h3 {
     flex: 1;
     font-size: 0.95em;
     color: #333;
+    font-weight: 500;
 }
 
 .alert-time {
     font-size: 0.8em;
     color: #666;
-    margin-right: 30px;
     white-space: nowrap;
 }
 
 .close-alert {
     position: absolute;
     right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
+    top: 10px;
     background: none;
     border: none;
     font-size: 18px;

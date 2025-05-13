@@ -66,3 +66,4 @@ A aplicação Essenciália permite acompanhar e controlar processos de extraçã
 ---
 
 Se quiser um diagrama, fluxograma, ou detalhamento de alguma parte específica, consulte a documentação ou entre em contato com os desenvolvedores.
+ 

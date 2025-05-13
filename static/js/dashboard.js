@@ -1,33 +1,38 @@
+Chart.register(ChartDataLabels);
+
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#666';
+Chart.defaults.plugins.datalabels.color = '#fff';
+Chart.defaults.plugins.datalabels.font.weight = 'bold';
+
+Chart.defaults.locale = window.dateFnsLocale;
+
 document.addEventListener("DOMContentLoaded", () => {
-    // Inicializar componentes
     initProgressCircle()
-    initCharts() // Inicializar gráficos primeiro
+    initCharts()
     initPressureGauge()
     initWaterLevel()
     initControls()
     initAlerts()
     initPlantSelection()
-  
-    // Iniciar busca de dados reais
+
     startDataFetching()
-  
-    // Iniciar simulação como fallback
+
     startSimulation()
   })
-  
-  // Variáveis globais para simulação
+
   const simulationData = {
     temperature: 0,
     pressure: 0,
     waterLevel: 50,
-    timeRemaining: 3600, // 1 hora em segundos
+    timeRemaining: 3600,
     progress: 0,
     isRunning: true,
-    useRealData: false, // Flag para controlar se estamos usando dados reais
-    currentPlant: null, // Planta atual selecionada
+    useRealData: false,
+    currentPlant: null,
   }
-  
-  // Dados das plantas
+
   const plants = {
     lavanda: {
       name: "Lavanda",
@@ -60,87 +65,65 @@ document.addEventListener("DOMContentLoaded", () => {
       description: "Refrescante e medicinal",
     },
   }
-  
-  // Inicializar seleção de plantas
+
   function initPlantSelection() {
-    // Abrir modal ao clicar no botão "Iniciar novo processo"
     document.querySelector(".new-process-btn").addEventListener("click", () => {
       document.getElementById("plantSelectionModal").style.display = "block"
     })
-  
-    // Fechar modal ao clicar no X
+
     document.querySelector(".close-modal").addEventListener("click", () => {
       document.getElementById("plantSelectionModal").style.display = "none"
     })
-  
-    // Fechar modal ao clicar fora dele
+
     window.addEventListener("click", (event) => {
       if (event.target === document.getElementById("plantSelectionModal")) {
         document.getElementById("plantSelectionModal").style.display = "none"
       }
     })
-  
-    // Adicionar evento de clique aos cards de plantas
+
     document.querySelectorAll(".plant-card").forEach((card) => {
       card.addEventListener("click", () => {
-        // Remover seleção anterior
         document.querySelectorAll(".plant-card").forEach((c) => c.classList.remove("selected"))
-  
-        // Adicionar seleção ao card clicado
+
         card.classList.add("selected")
-  
-        // Obter dados da planta
+
         const plantId = card.dataset.plant
         const plantTemp = Number.parseInt(card.dataset.temp)
         const plantPressure = Number.parseInt(card.dataset.pressure)
-  
-        // Selecionar a planta
+
         selectPlant(plantId, plantTemp, plantPressure)
-  
-        // Fechar o modal após um breve delay
+
         setTimeout(() => {
           document.getElementById("plantSelectionModal").style.display = "none"
         }, 500)
       })
     })
   }
-  
-  // Selecionar uma planta
+
   function selectPlant(plantId, recommendedTemp, recommendedPressure) {
-    // Armazenar planta atual
     simulationData.currentPlant = plantId
-  
-    // Atualizar nome da planta
+
     document.querySelector(".plant-name").innerText = plants[plantId].name
-  
-    // Atualizar temperatura recomendada
+
     document.querySelector(".current-temp").textContent = `${recommendedTemp} °C`
-  
-    // Adicionar indicadores de valores recomendados
+
     addRecommendedIndicators(recommendedTemp, recommendedPressure)
-  
-    // Reiniciar o processo
+
     simulationData.timeRemaining = 3600
     simulationData.progress = 0
     simulationData.isRunning = true
     document.getElementById("interruptBtn").innerHTML = '<span class="btn-icon">⏸️</span> Interromper'
-  
-    // Atualizar display de tempo
+
     document.querySelector(".time-display").textContent = formatTime(simulationData.timeRemaining)
-  
-    // Atualizar círculo de progresso
+
     window.updateProgressCircle(0)
-  
-    // Adicionar alerta
+
     addAlert("success", `Processo iniciado com ${plants[plantId].name}. ${plants[plantId].description}`)
-  
-    // Publicar seleção de planta via MQTT
+
     publishMQTTCommand("plant", plantId)
   }
-  
-  // Adicionar indicadores de valores recomendados
+
   function addRecommendedIndicators(recommendedTemp, recommendedPressure) {
-    // Adicionar indicador de temperatura recomendada
     const tempDisplay = document.querySelector(".temp-display")
     if (!tempDisplay.querySelector(".recommended-value")) {
       const tempRecommended = document.createElement("span")
@@ -150,8 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       tempDisplay.querySelector(".recommended-value").textContent = `Meta: ${recommendedTemp}°C`
     }
-  
-    // Adicionar indicador de pressão recomendada
+
     const pressureDisplay = document.querySelector(".gauge-value")
     const pressureContainer = pressureDisplay.parentElement
     if (!pressureContainer.querySelector(".recommended-value")) {
@@ -163,37 +145,29 @@ document.addEventListener("DOMContentLoaded", () => {
       pressureContainer.querySelector(".recommended-value").textContent = `Meta: ${recommendedPressure} Pa`
     }
   }
-  
-  // Função para publicar comandos MQTT
+
   function publishMQTTCommand(command, value) {
-    // Construir payload do comando
     const payload = {
       command: command,
       value: value,
       timestamp: new Date().toISOString(),
     }
   }
-  
-  // Iniciar busca de dados
+
   function startDataFetching() {
-    // Atualizar dados MQTT a cada 2 segundos
     setInterval(updateBoardInfo, 2000)
-    
-    // Atualizar gráficos e alertas a cada 2 segundos
+
     setInterval(() => {
         updateCharts()
         fetchAlerts()
     }, 2000)
-    
-    // Buscar dados iniciais
+
     updateBoardInfo()
     updateCharts()
     fetchAlerts()
   }
-  
-  // Função para atualizar os gráficos
+
   function updateCharts() {
-    // Atualizar gráfico de temperatura
     fetch('/temperature-data')
         .then(response => response.json())
         .then(data => {
@@ -203,7 +177,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             
             const chartData = data.timestamps.map((timestamp, index) => ({
-                x: new Date(timestamp).getTime(), // Converter para timestamp
+                x: new Date(timestamp).getTime(),
                 y: parseFloat(data.temperatures[index])
             }));
             
@@ -214,7 +188,6 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(error => console.error('Erro ao buscar dados de temperatura:', error));
 
-    // Atualizar gráfico de pressão
     fetch('/pressure-data')
         .then(response => response.json())
         .then(data => {
@@ -224,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             
             const chartData = data.timestamps.map((timestamp, index) => ({
-                x: new Date(timestamp).getTime(), // Converter para timestamp
+                x: new Date(timestamp).getTime(),
                 y: parseFloat(data.pressures[index])
             }));
             
@@ -235,56 +208,47 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(error => console.error('Erro ao buscar dados de pressão:', error));
   }
-  
-  // Função para buscar dados MQTT
+
   function updateBoardInfo() {
     fetch("/mqtt-data")
-        .then((response) => response.json())
-        .then((data) => {
-            // Marcar que estamos usando dados reais
-            simulationData.useRealData = true
+      .then((response) => response.json())
+      .then((data) => {
+        simulationData.useRealData = true
 
-            // Atualizar nome da planta se não houver uma selecionada
-            if (!simulationData.currentPlant) {
-                document.querySelector(".plant-name").innerText = "Manjericão"
-            }
+        if (!simulationData.currentPlant) {
+          document.querySelector(".plant-name").innerText = "Manjericão"
+        }
 
-            // Atualizar temperatura
             const tempValue = parseFloat(data.temperatura) || 0
             document.querySelector(".temp-value").innerText = `${tempValue.toFixed(1)} °C`
-            simulationData.temperature = tempValue
+        simulationData.temperature = tempValue
 
-            // Atualizar nível de água
-            const waterLevel = data.nivel === "ALTO" ? 80 : 20
-            simulationData.waterLevel = waterLevel
-            window.updateWaterLevel(waterLevel)
+        const waterLevel = data.nivel === "ALTO" ? 80 : 20
+        simulationData.waterLevel = waterLevel
+        window.updateWaterLevel(waterLevel)
 
-            // Atualizar pressão
             const pressure = parseFloat(data.pressao_kPa) || 0
-            simulationData.pressure = pressure
-            window.updatePressureGauge(pressure)
+        simulationData.pressure = pressure
+        window.updatePressureGauge(pressure)
 
-            // Adicionar alerta de dados atualizados (apenas na primeira vez)
-            if (!simulationData.alertShown) {
-                addAlert("success", "Conectado ao broker MQTT. Dados reais sendo exibidos.")
-                simulationData.alertShown = true
-            }
-        })
-        .catch((error) => {
-            console.error("Erro ao buscar dados MQTT:", error)
-            if (simulationData.useRealData) {
-                addAlert("error", "Erro na conexão MQTT. Usando dados simulados.")
-                simulationData.useRealData = false
-            }
-        })
+        if (!simulationData.alertShown) {
+          addAlert("success", "Conectado ao broker MQTT. Dados reais sendo exibidos.")
+          simulationData.alertShown = true
+        }
+      })
+      .catch((error) => {
+        console.error("Erro ao buscar dados MQTT:", error)
+        if (simulationData.useRealData) {
+          addAlert("error", "Erro na conexão MQTT. Usando dados simulados.")
+          simulationData.useRealData = false
+        }
+      })
   }
-  
-  // Configuração dos gráficos
+
   let temperatureChart = null;
   let pressureChart = null;
 
   function initCharts() {
-    // Configuração comum para ambos os gráficos
     const commonOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -332,11 +296,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     },
                     tooltipFormat: 'HH:mm:ss'
                 },
-                adapters: {
-                    date: {
-                        locale: 'pt-BR'
-                    }
-                },
                 grid: {
                     display: false
                 },
@@ -376,14 +335,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 borderColor: '#FF6B6B',
                 backgroundColor: 'rgba(255, 107, 107, 0.1)',
                 borderWidth: 2,
-                pointRadius: 3,
-                pointHoverRadius: 5,
+                pointRadius: 0,
+                pointHoverRadius: 0,
                 tension: 0.4,
                 fill: true
             }]
         },
         options: {
             ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                datalabels: {
+                    display: false
+                }
+            },
             scales: {
                 ...commonOptions.scales,
                 y: {
@@ -408,14 +373,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 borderColor: '#4ECDC4',
                 backgroundColor: 'rgba(78, 205, 196, 0.1)',
                 borderWidth: 2,
-                pointRadius: 3,
-                pointHoverRadius: 5,
+                pointRadius: 0,
+                pointHoverRadius: 0,
                 tension: 0.4,
                 fill: true
             }]
         },
         options: {
             ...commonOptions,
+            plugins: {
+                ...commonOptions.plugins,
+                datalabels: {
+                    display: false
+                }
+            },
             scales: {
                 ...commonOptions.scales,
                 y: {
@@ -429,16 +400,13 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
   }
-  
-  // Inicializar alertas
+
   function initAlerts() {
-    // Adicionar evento para fechar alertas
     document.querySelectorAll(".close-alert").forEach((button) => {
         button.addEventListener("click", function () {
             const alertElement = this.parentElement;
             const alertId = alertElement.dataset.alertId;
             if (alertId) {
-                // Marcar alerta como resolvido no banco de dados
                 fetch(`/alerts/resolve/${alertId}`, {
                     method: 'POST'
                 }).then(response => response.json())
@@ -454,17 +422,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Buscar alertas iniciais
     fetchAlerts();
   }
-  
-  // Função para buscar alertas do servidor
+
   function fetchAlerts() {
     fetch("/alerts")
         .then(response => response.json())
         .then(alerts => {
             const alertList = document.querySelector(".alert-list");
-            // Limpar alertas existentes
             alertList.innerHTML = "";
             
             if (alerts.length === 0) {
@@ -478,7 +443,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // Adicionar cada alerta
             alerts.forEach(alert => {
                 const alertElement = document.createElement("div");
                 alertElement.className = `alert ${getAlertClass(alert.type)}`;
@@ -488,14 +452,78 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (alert.type === "success") icon = "✅";
                 else if (alert.type === "info") icon = "ℹ️";
 
+                let alertDetails = "";
+                if (alert.data) {
+                    switch (alert.type) {
+                        case "temperature":
+                            alertDetails = `
+                                <div class="alert-details">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Temperatura:</span>
+                                        <span class="detail-value">${alert.data.temperatura}°C</span>
+                                    </div>
+                                    ${alert.data.limite ? `
+                                    <div class="detail-item">
+                                        <span class="detail-label">Limite:</span>
+                                        <span class="detail-value">${alert.data.limite}°C</span>
+                                    </div>` : ''}
+                                </div>`;
+                            break;
+                        case "pressure":
+                            if (alert.data.variacao) {
+                                alertDetails = `
+                                    <div class="alert-details">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Pressão Atual:</span>
+                                            <span class="detail-value">${alert.data.pressao_atual} kPa</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Pressão Anterior:</span>
+                                            <span class="detail-value">${alert.data.pressao_anterior} kPa</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Variação:</span>
+                                            <span class="detail-value">${alert.data.variacao.toFixed(1)} kPa</span>
+                                        </div>
+                                    </div>`;
+                            } else {
+                                alertDetails = `
+                                    <div class="alert-details">
+                                        <div class="detail-item">
+                                            <span class="detail-label">Pressão:</span>
+                                            <span class="detail-value">${alert.data.pressao} kPa</span>
+                                        </div>
+                                        <div class="detail-item">
+                                            <span class="detail-label">Limite:</span>
+                                            <span class="detail-value">${alert.data.limite} kPa</span>
+                                        </div>
+                                    </div>`;
+                            }
+                            break;
+                        case "water_level":
+                            alertDetails = `
+                                <div class="alert-details">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Nível:</span>
+                                        <span class="detail-value">${alert.data.nivel}</span>
+                                    </div>
+                                </div>`;
+                            break;
+                    }
+                }
+
                 alertElement.innerHTML = `
-                    <span class="alert-icon">${icon}</span>
-                    <span class="alert-text">${alert.message}</span>
-                    <span class="alert-time">${formatAlertTime(alert.timestamp)}</span>
-                    <button class="close-alert">×</button>
+                    <div class="alert-header">
+                        <span class="alert-icon">${icon}</span>
+                        <span class="alert-text">${alert.message}</span>
+                        <button class="close-alert">×</button>
+                    </div>
+                    ${alertDetails}
+                    <div class="alert-footer">
+                        <span class="alert-time">${formatAlertTime(alert.timestamp)}</span>
+                    </div>
                 `;
 
-                // Adicionar evento para fechar
                 alertElement.querySelector(".close-alert").addEventListener("click", () => {
                     fetch(`/alerts/resolve/${alert.id}`, {
                         method: 'POST'
@@ -513,8 +541,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })
         .catch(error => console.error('Erro ao buscar alertas:', error));
   }
-  
-  // Função para determinar a classe CSS do alerta
+
   function getAlertClass(type) {
     switch (type) {
         case 'temperature':
@@ -529,14 +556,12 @@ document.addEventListener("DOMContentLoaded", () => {
             return 'info';
     }
   }
-  
-  // Função para formatar o timestamp do alerta
+
   function formatAlertTime(timestamp) {
     const date = new Date(timestamp);
     const now = new Date();
     const diff = now - date;
     
-    // Formatar a data para o fuso horário local
     const localTime = date.toLocaleTimeString('pt-BR', {
         hour: '2-digit',
         minute: '2-digit',
@@ -544,21 +569,17 @@ document.addEventListener("DOMContentLoaded", () => {
         hour12: false
     });
     
-    // Se for menos de 1 minuto
     if (diff < 60000) {
         return 'Agora mesmo';
     }
-    // Se for menos de 1 hora
     if (diff < 3600000) {
         const minutes = Math.floor(diff / 60000);
         return `${minutes} minuto${minutes > 1 ? 's' : ''} atrás (${localTime})`;
     }
-    // Se for menos de 24 horas
     if (diff < 86400000) {
         const hours = Math.floor(diff / 3600000);
         return `${hours} hora${hours > 1 ? 's' : ''} atrás (${localTime})`;
     }
-    // Se for mais de 24 horas, mostrar data e hora
     return date.toLocaleString('pt-BR', {
         day: '2-digit',
         month: '2-digit',
@@ -569,9 +590,8 @@ document.addEventListener("DOMContentLoaded", () => {
         hour12: false
     });
   }
-  
-  // Função para adicionar um novo alerta
-  function addAlert(type, message) {
+
+  function addAlert(type, message, data = null) {
     const alertList = document.querySelector(".alert-list");
     const alertElement = document.createElement("div");
     alertElement.className = `alert ${type}`;
@@ -580,22 +600,84 @@ document.addEventListener("DOMContentLoaded", () => {
     if (type === "success") icon = "✅";
     else if (type === "info") icon = "ℹ️";
 
+    let alertDetails = "";
+    if (data) {
+        switch (type) {
+            case "temperature":
+                alertDetails = `
+                    <div class="alert-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Temperatura:</span>
+                            <span class="detail-value">${data.temperatura}°C</span>
+                        </div>
+                        ${data.limite ? `
+                        <div class="detail-item">
+                            <span class="detail-label">Limite:</span>
+                            <span class="detail-value">${data.limite}°C</span>
+                        </div>` : ''}
+                    </div>`;
+                break;
+            case "pressure":
+                if (data.variacao) {
+                    alertDetails = `
+                        <div class="alert-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Pressão Atual:</span>
+                                <span class="detail-value">${data.pressao_atual} kPa</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Pressão Anterior:</span>
+                                <span class="detail-value">${data.pressao_anterior} kPa</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Variação:</span>
+                                <span class="detail-value">${data.variacao.toFixed(1)} kPa</span>
+                            </div>
+                        </div>`;
+                } else {
+                    alertDetails = `
+                        <div class="alert-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Pressão:</span>
+                                <span class="detail-value">${data.pressao} kPa</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Limite:</span>
+                                <span class="detail-value">${data.limite} kPa</span>
+                            </div>
+                        </div>`;
+                }
+                break;
+            case "water_level":
+                alertDetails = `
+                    <div class="alert-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Nível:</span>
+                            <span class="detail-value">${data.nivel}</span>
+                        </div>
+                    </div>`;
+                break;
+        }
+    }
+
     alertElement.innerHTML = `
-        <span class="alert-icon">${icon}</span>
-        <span class="alert-text">${message}</span>
-        <span class="alert-time">Agora mesmo</span>
-        <button class="close-alert">×</button>
+        <div class="alert-header">
+            <span class="alert-icon">${icon}</span>
+            <span class="alert-text">${message}</span>
+            <button class="close-alert">×</button>
+        </div>
+        ${alertDetails}
+        <div class="alert-footer">
+            <span class="alert-time">Agora mesmo</span>
+        </div>
     `;
 
-    // Adicionar evento para fechar
     alertElement.querySelector(".close-alert").addEventListener("click", () => {
         alertElement.style.display = "none";
     });
 
-    // Adicionar ao topo da lista
     alertList.prepend(alertElement);
 
-    // Auto-remover após 5 segundos (apenas para alertas temporários)
     if (!alertElement.dataset.alertId) {
         setTimeout(() => {
             alertElement.style.opacity = "0";
@@ -604,8 +686,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 5000);
     }
   }
-  
-  // Função para formatar tempo (segundos para HH:MM:SS)
+
   function formatTime(seconds) {
     const h = Math.floor(seconds / 3600)
     const m = Math.floor((seconds % 3600) / 60)
@@ -613,40 +694,31 @@ document.addEventListener("DOMContentLoaded", () => {
   
     return [h, m, s].map((v) => (v < 10 ? "0" + v : v)).join(":")
   }
-  
-  // Iniciar simulação
+
   function startSimulation() {
-    // Atualizar a cada segundo
     setInterval(() => {
-      // Não atualizar se estivermos usando dados reais
       if (simulationData.useRealData) return
   
       if (!simulationData.isRunning) return
   
-      // Atualizar tempo restante
       simulationData.timeRemaining = Math.max(0, simulationData.timeRemaining - 1)
       document.querySelector(".time-display").textContent = formatTime(simulationData.timeRemaining)
   
-      // Calcular progresso
       simulationData.progress = 100 - (simulationData.timeRemaining / 3600) * 100
       window.updateProgressCircle(simulationData.progress)
   
-      // Simular aumento de temperatura
       simulationData.temperature = Math.min(100, simulationData.temperature + 0.2)
       document.querySelector(".temp-value").textContent = `${Math.floor(simulationData.temperature)} °C`
       window.updateTemperatureChart(simulationData.temperature)
   
-      // Simular flutuação de pressão
       const pressureChange = (Math.random() - 0.5) * 5
       simulationData.pressure = Math.max(0, Math.min(100, simulationData.pressure + pressureChange))
       window.updatePressureGauge(simulationData.pressure)
   
-      // Simular flutuação de nível de água
       const levelChange = (Math.random() - 0.5) * 2
       simulationData.waterLevel = Math.max(0, Math.min(100, simulationData.waterLevel + levelChange))
       window.updateWaterLevel(simulationData.waterLevel)
   
-      // Gerar alertas aleatórios
       if (Math.random() < 0.01) {
         const types = ["error", "success", "info"]
         const messages = [
@@ -663,7 +735,6 @@ document.addEventListener("DOMContentLoaded", () => {
         addAlert(type, message)
       }
   
-      // Verificar fim do processo
       if (simulationData.timeRemaining === 0) {
         addAlert("success", "Processo concluído com sucesso!")
         simulationData.isRunning = false
@@ -671,8 +742,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }, 1000)
   }
-  
-  // Inicializar o círculo de progresso
+
   function initProgressCircle() {
     const canvas = document.getElementById("progressCircle")
     const ctx = canvas.getContext("2d")
@@ -680,18 +750,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const centerY = canvas.height / 2
     const radius = 70
   
-    // Função para desenhar o círculo
     function drawCircle(percentage) {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
   
-      // Círculo de fundo
       ctx.beginPath()
       ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI)
       ctx.strokeStyle = "#e0e0e0"
       ctx.lineWidth = 10
       ctx.stroke()
   
-      // Círculo de progresso
       if (percentage > 0) {
         ctx.beginPath()
         ctx.arc(centerX, centerY, radius, -Math.PI / 2, (2 * Math.PI * percentage) / 100 - Math.PI / 2)
@@ -700,40 +767,31 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.stroke()
       }
   
-      // Atualizar texto de porcentagem
       document.querySelector(".progress-text").textContent = `${Math.floor(percentage)}%`
     }
   
-    // Desenhar círculo inicial
     drawCircle(0)
   
-    // Expor função para atualização
     window.updateProgressCircle = drawCircle
   }
-  
-  // Inicializar o gráfico de temperatura
+
   function initTemperatureChart() {
     const canvas = document.getElementById("temperatureChart")
     const ctx = canvas.getContext("2d")
     const width = (canvas.width = canvas.parentElement.clientWidth)
     const height = (canvas.height = 250)
   
-    // Dados iniciais
     const data = Array(60).fill(0)
     const maxTemp = 100
   
-    // Função para desenhar o gráfico
     function drawChart() {
-      // Só desenhar se não estivermos usando dados reais
       if (simulationData.useRealData) return
   
       ctx.clearRect(0, 0, width, height)
   
-      // Desenhar linhas de grade
       ctx.strokeStyle = "#e0e0e0"
       ctx.lineWidth = 1
   
-      // Linhas horizontais
       for (let i = 0; i <= 4; i++) {
         const y = height - (height / 4) * i
         ctx.beginPath()
@@ -741,14 +799,12 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.lineTo(width, y)
         ctx.stroke()
   
-        // Rótulos de temperatura
         ctx.fillStyle = "#666"
         ctx.font = "12px Inter"
         ctx.textAlign = "right"
         ctx.fillText(`${i * 25}°C`, 30, y - 5)
       }
   
-      // Linhas verticais e rótulos de tempo
       for (let i = 0; i <= 3; i++) {
         const x = (width / 3) * i
         ctx.beginPath()
@@ -756,7 +812,6 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.lineTo(x, height)
         ctx.stroke()
   
-        // Rótulos de tempo
         if (i > 0) {
           ctx.fillStyle = "#666"
           ctx.font = "12px Inter"
@@ -767,7 +822,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
   
-      // Desenhar linha de temperatura
       ctx.beginPath()
       ctx.moveTo(0, height - (data[0] / maxTemp) * height)
   
@@ -782,24 +836,11 @@ document.addEventListener("DOMContentLoaded", () => {
       ctx.stroke()
     }
   
-    // Função para adicionar novo ponto de dados
-    function addDataPoint(temp) {
-      // Só adicionar se não estivermos usando dados reais
-      if (simulationData.useRealData) return
-  
-      data.shift()
-      data.push(temp)
-      drawChart()
-    }
-  
-    // Desenhar gráfico inicial
     drawChart()
   
-    // Expor função para atualização
     window.updateTemperatureChart = addDataPoint
   }
-  
-  // Inicializar o medidor de pressão
+
   function initPressureGauge() {
     const canvas = document.getElementById("pressureGauge")
     const ctx = canvas.getContext("2d")
@@ -809,26 +850,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const centerY = height
     const radius = height - 20
   
-    // Função para desenhar o medidor
     function drawGauge(pressure) {
       ctx.clearRect(0, 0, width, height)
   
-      // Desenhar arco de fundo
       ctx.beginPath()
       ctx.arc(centerX, centerY, radius, Math.PI, 0)
       ctx.strokeStyle = "#e0e0e0"
       ctx.lineWidth = 20
       ctx.stroke()
   
-      // Definir cores para diferentes níveis de pressão
       const colors = [
-        { limit: 25, color: "#4CAF50" }, // Verde - Baixo
-        { limit: 50, color: "#8BC34A" }, // Verde claro - Normal
-        { limit: 75, color: "#FFC107" }, // Amarelo - Atenção
-        { limit: 100, color: "#F44336" }, // Vermelho - Risco
+        { limit: 25, color: "#4CAF50" },
+        { limit: 50, color: "#8BC34A" },
+        { limit: 75, color: "#FFC107" },
+        { limit: 100, color: "#F44336" },
       ]
   
-      // Desenhar arcos coloridos
       let startAngle = Math.PI
       for (let i = 0; i < colors.length; i++) {
         const endAngle = Math.PI - (Math.PI * colors[i].limit) / 100
@@ -842,7 +879,6 @@ document.addEventListener("DOMContentLoaded", () => {
         startAngle = endAngle
       }
   
-      // Desenhar ponteiro
       const angle = Math.PI - (Math.PI * pressure) / 100
       ctx.beginPath()
       ctx.moveTo(centerX, centerY)
@@ -851,16 +887,13 @@ document.addEventListener("DOMContentLoaded", () => {
       ctx.lineWidth = 3
       ctx.stroke()
   
-      // Desenhar círculo central
       ctx.beginPath()
       ctx.arc(centerX, centerY, 10, 0, 2 * Math.PI)
       ctx.fillStyle = "#333"
       ctx.fill()
   
-      // Atualizar valor de pressão
       document.querySelector(".gauge-value").textContent = `${Math.floor(pressure)} kPa`
   
-      // Atualizar estado
       let state = "Baixa"
       if (pressure > 75) state = "Risco"
       else if (pressure > 50) state = "Atenção"
@@ -869,22 +902,17 @@ document.addEventListener("DOMContentLoaded", () => {
       document.querySelector(".gauge-label").textContent = `Estado: ${state}`
     }
   
-    // Desenhar medidor inicial
     drawGauge(0)
   
-    // Expor função para atualização
     window.updatePressureGauge = drawGauge
   }
-  
-  // Inicializar o nível de água
+
   function initWaterLevel() {
     const waterFill = document.getElementById("waterFill")
   
-    // Função para atualizar o nível de água
     function updateLevel(level) {
       waterFill.style.height = `${level}%`
   
-      // Atualizar status
       let status = "Baixo"
       if (level > 75) status = "Alto"
       else if (level > 25) status = "Normal"
@@ -892,25 +920,20 @@ document.addEventListener("DOMContentLoaded", () => {
       document.querySelector(".level-status").textContent = `${status} (${Math.floor(level)}%)`
     }
   
-    // Nível inicial
     updateLevel(50)
   
-    // Expor função para atualização
     window.updateWaterLevel = updateLevel
   }
-  
-  // Inicializar controles
+
   function initControls() {
-    // Botão de interromper
     const interruptBtn = document.getElementById("interruptBtn");
     if (interruptBtn) {
       interruptBtn.addEventListener("click", function () {
         simulationData.isRunning = !simulationData.isRunning;
-        this.innerHTML = simulationData.isRunning
-          ? '<span class="btn-icon">⏸️</span> Interromper'
+      this.innerHTML = simulationData.isRunning
+        ? '<span class="btn-icon">⏸️</span> Interromper'
           : '<span class="btn-icon">▶️</span> Continuar';
-        // Enviar comando MQTT
-        publishMQTTCommand("process", simulationData.isRunning ? "start" : "stop");
+      publishMQTTCommand("process", simulationData.isRunning ? "start" : "stop");
       });
     }
   }

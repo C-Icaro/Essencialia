@@ -3,6 +3,7 @@ from flask import render_template, jsonify  # Importando render_template e jsoni
 from mqtt.mqtt_handler import mqtt_data  # Importando mqtt_data
 import sqlite3  # Importando sqlite3
 from datetime import datetime, timedelta
+import json
 
 # Função para converter UTC para horário de Manaus (UTC-4)
 def convert_to_manaus_time(utc_timestamp):
@@ -79,7 +80,7 @@ def get_alerts():
     conn = sqlite3.connect("data.db")
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT id, timestamp, alert_type, message, is_resolved 
+        SELECT id, timestamp, alert_type, message, data, is_resolved 
         FROM alerts 
         WHERE is_resolved = 0 
         ORDER BY timestamp DESC 
@@ -88,13 +89,21 @@ def get_alerts():
     rows = cursor.fetchall()
     conn.close()
     
-    alerts = [{
-        "id": row[0],
-        "timestamp": convert_to_manaus_time(row[1]),
-        "type": row[2],
-        "message": row[3],
-        "is_resolved": bool(row[4])
-    } for row in rows]
+    alerts = []
+    for row in rows:
+        try:
+            data = json.loads(row[4]) if row[4] else None
+        except (json.JSONDecodeError, TypeError):
+            data = None
+            
+        alerts.append({
+            "id": row[0],
+            "timestamp": convert_to_manaus_time(row[1]),
+            "type": row[2],
+            "message": row[3],
+            "data": data,
+            "is_resolved": bool(row[5])
+        })
     
     return jsonify(alerts)
 

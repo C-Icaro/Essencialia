@@ -1,6 +1,7 @@
 import sqlite3
 import paho.mqtt.client as mqtt
 import json
+from datetime import datetime
 
 # Variáveis globais para armazenar os dados recebidos
 mqtt_data = {
@@ -50,6 +51,7 @@ def init_db():
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
             alert_type TEXT NOT NULL,
             message TEXT NOT NULL,
+            data TEXT,
             is_resolved BOOLEAN DEFAULT 0,
             resolved_at DATETIME,
             FOREIGN KEY (process_id) REFERENCES process(id)
@@ -57,6 +59,52 @@ def init_db():
     """)
     conn.commit()
     conn.close()
+
+# Recriar a tabela de alertas se necessário
+def recreate_alerts_table():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    
+    # Verificar se a coluna data existe
+    cursor.execute("PRAGMA table_info(alerts)")
+    columns = [column[1] for column in cursor.fetchall()]
+    
+    if 'data' not in columns:
+        print("Atualizando estrutura da tabela de alertas...")
+        # Criar tabela temporária com a nova estrutura
+        cursor.execute("""
+            CREATE TABLE alerts_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                process_id INTEGER,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                alert_type TEXT NOT NULL,
+                message TEXT NOT NULL,
+                data TEXT,
+                is_resolved BOOLEAN DEFAULT 0,
+                resolved_at DATETIME,
+                FOREIGN KEY (process_id) REFERENCES process(id)
+            )
+        """)
+        
+        # Copiar dados existentes
+        cursor.execute("""
+            INSERT INTO alerts_new (id, process_id, timestamp, alert_type, message, is_resolved, resolved_at)
+            SELECT id, process_id, timestamp, alert_type, message, is_resolved, resolved_at
+            FROM alerts
+        """)
+        
+        # Remover tabela antiga e renomear a nova
+        cursor.execute("DROP TABLE alerts")
+        cursor.execute("ALTER TABLE alerts_new RENAME TO alerts")
+        
+        conn.commit()
+        print("Estrutura da tabela de alertas atualizada com sucesso!")
+    
+    conn.close()
+
+# Inicializar banco de dados e atualizar estrutura se necessário
+init_db()
+recreate_alerts_table()
 
 def save_temperature_to_db(temperature):
     conn = sqlite3.connect(DB_FILE)
@@ -82,30 +130,32 @@ def on_message(client, userdata, msg):
     try:
         # Verificar se é um tópico de alerta
         if msg.topic == "essencialia/alertas":
-            # Salvar alerta no banco de dados
+            # Processar e salvar alerta no banco de dados
             conn = sqlite3.connect(DB_FILE)
             cursor = conn.cursor()
             
-            # Determinar o tipo de alerta baseado na mensagem
-            alert_type = "info"
-            message = msg.payload.decode()
-            
-            if "temperatura" in message.lower():
-                alert_type = "temperature"
-            elif "pressao" in message.lower():
-                alert_type = "pressure"
-            elif "nivel" in message.lower():
-                alert_type = "water_level"
-            
-            # Inserir alerta
-            cursor.execute("""
-                INSERT INTO alerts (process_id, alert_type, message)
-                VALUES (?, ?, ?)
-            """, (None, alert_type, message))
-            
-            conn.commit()
-            conn.close()
-            print(f"Alerta salvo: {message}")
+            try:
+                # Decodificar e parsear o JSON do alerta
+                alerta = json.loads(msg.payload.decode())
+                
+                # Inserir alerta com todos os dados
+                cursor.execute("""
+                    INSERT INTO alerts (process_id, alert_type, message, data, timestamp)
+                    VALUES (?, ?, ?, ?, ?)
+                """, (
+                    None,
+                    alerta.get('type', 'info'),
+                    alerta.get('message', ''),
+                    json.dumps(alerta.get('data', {})),
+                    alerta.get('data', {}).get('timestamp', datetime.now().isoformat())
+                ))
+                
+                conn.commit()
+                print(f"Alerta salvo: {alerta['message']}")
+            except json.JSONDecodeError as e:
+                print(f"Erro ao decodificar alerta: {e}")
+            finally:
+                conn.close()
             return
 
         # Processar dados normais dos sensores
@@ -122,10 +172,8 @@ def on_message(client, userdata, msg):
         conn.commit()
         conn.close()
         print(f"Dados salvos: temperatura={payload.get('temperatura', 0)}, pressao={payload.get('pressao_kPa', 0)}")
-    except json.JSONDecodeError:
-        print("Erro ao decodificar a mensagem MQTT")
     except Exception as e:
-        print(f"Erro ao processar mensagem MQTT: {str(e)}")
+        print(f"Erro ao processar mensagem MQTT: {e}")
 
 def start_mqtt(broker_host, broker_port):
     init_db()  # Inicializa o banco de dados
