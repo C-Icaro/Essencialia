@@ -45,6 +45,15 @@ document.addEventListener('DOMContentLoaded', function() {
       form.addEventListener('submit', function(e) {
         e.preventDefault();
         document.getElementById('novo-processo-modal').style.display = 'none';
+        // Coleta os dados do formulário
+        const planta = form.querySelector('select[name="planta"]').value;
+        const quantidade = form.querySelector('input[name="quantidade"]').value;
+        const parte = form.querySelector('select[name="parte"]').value;
+        const duracao = form.querySelector('#duracao-estimada').value;
+        // Dispara evento customizado para o dashboard
+        window.dispatchEvent(new CustomEvent('novoProcessoIniciado', {
+          detail: { planta, quantidade, parte, duracao }
+        }));
         alert('Processo iniciado com sucesso!');
       });
     }

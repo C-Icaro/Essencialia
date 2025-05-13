@@ -176,7 +176,7 @@ const alerts = {
 
     setupAlertInteractions(element, alert) {
         const closeBtn = element.querySelector('.close-alert');
-        if (closeBtn && alert.id) {
+        if (closeBtn && alert && alert.id) {
             closeBtn.addEventListener('click', async () => {
                 try {
                     const response = await fetch(`/alerts/resolve/${alert.id}`, {
@@ -189,6 +189,10 @@ const alerts = {
                 } catch (error) {
                     console.error('Erro ao resolver alerta:', error);
                 }
+            });
+        } else if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                element.style.display = 'none';
             });
         }
     },
@@ -708,6 +712,46 @@ document.addEventListener('DOMContentLoaded', () => {
     realtime.update();
     charts.update();
     alerts.fetch();
+
+    // Adiciona funcionalidade ao botão de abrir modal de produção
+    const btnProducao = document.getElementById('abrir-producao-modal-btn');
+    if (btnProducao) {
+        btnProducao.addEventListener('click', function() {
+            const modal = document.getElementById('producao-modal');
+            if (modal) modal.style.display = 'block';
+        });
+    }
+
+    // Escuta evento customizado do novo processo
+    window.addEventListener('novoProcessoIniciado', function(e) {
+        const { planta, quantidade, parte, duracao } = e.detail;
+        // Atualiza nome da planta
+        const plantName = document.querySelector('.plant-name');
+        if (plantName) plantName.textContent = planta.charAt(0).toUpperCase() + planta.slice(1);
+        // Atualiza quantidade de matéria-prima
+        const materialInput = document.querySelector('.material-input');
+        if (materialInput) materialInput.value = `${quantidade} gramas`;
+        // Atualiza parte utilizada (adiciona se não existir)
+        let parteEl = document.querySelector('.parte-utilizada');
+        if (!parteEl) {
+            parteEl = document.createElement('div');
+            parteEl.className = 'parte-utilizada';
+            parteEl.style.marginTop = '8px';
+            parteEl.style.fontSize = '15px';
+            document.querySelector('.plant-info').appendChild(parteEl);
+        }
+        parteEl.textContent = `Parte utilizada: ${parte.charAt(0).toUpperCase() + parte.slice(1)}`;
+        // Atualiza duração estimada (adiciona se não existir)
+        let duracaoEl = document.querySelector('.duracao-estimada');
+        if (!duracaoEl) {
+            duracaoEl = document.createElement('div');
+            duracaoEl.className = 'duracao-estimada';
+            duracaoEl.style.marginTop = '4px';
+            duracaoEl.style.fontSize = '15px';
+            document.querySelector('.plant-info').appendChild(duracaoEl);
+        }
+        duracaoEl.textContent = `Duração estimada: ${duracao}`;
+    });
 });
 
 // Atualiza o gauge de pressão desenhando o arco no canvas
