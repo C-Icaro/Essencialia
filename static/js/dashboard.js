@@ -497,7 +497,7 @@ const simulation = {
 
             const type = types[Math.floor(Math.random() * types.length)];
             const message = messages[Math.floor(Math.random() * messages.length)];
-
+P
             alerts.add(type, message);
         }
     },
@@ -563,7 +563,45 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (timeDisplayEl) timeDisplayEl.textContent = '00:00:00';
         }
     }
+
+    async function atualizarTempoRestanteProcesso() {
+        try {
+            const response = await fetch('/api/process');
+            const result = await response.json();
+            const timeDisplayEl = document.querySelector('.time-display');
+            if (!timeDisplayEl) return;
+
+            if (result.success) {
+                const processoEmAndamento = result.processes.find(p => p.status === 'em andamento');
+                if (processoEmAndamento && processoEmAndamento.start_time && processoEmAndamento.tempo_estimado) {
+                    // start_time no formato dd/mm/yyyy HH:MM:SS
+                    const [data, hora] = processoEmAndamento.start_time.split(' ');
+                    const [dia, mes, ano] = data.split('/');
+                    const [h, m, s] = hora.split(':');
+                    const startDate = new Date(`${ano}-${mes}-${dia}T${h}:${m}:${s}`);
+                    const agora = new Date();
+                    const diffMin = Math.floor((agora - startDate) / 60000);
+                    let tempoRestante = Math.max(0, processoEmAndamento.tempo_estimado - diffMin);
+
+                    // Formatar para HH:MM:SS
+                    const horas = Math.floor(tempoRestante / 60);
+                    const minutos = tempoRestante % 60;
+                    timeDisplayEl.textContent = `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:00`;
+                } else {
+                    timeDisplayEl.textContent = '00:00:00';
+                }
+            } else {
+                timeDisplayEl.textContent = '00:00:00';
+            }
+        } catch (error) {
+            const timeDisplayEl = document.querySelector('.time-display');
+            if (timeDisplayEl) timeDisplayEl.textContent = '00:00:00';
+        }
+    }
+
     await atualizarProcessoEmAndamento();
+    await atualizarTempoRestanteProcesso();
+    setInterval(atualizarTempoRestanteProcesso, 60000); // Atualiza a cada minuto
 
     // Inicializar componentes
     charts.init();

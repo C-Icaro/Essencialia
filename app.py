@@ -194,6 +194,23 @@ def create_alert():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/process/<int:process_id>/update_time', methods=['POST'])
+def update_process_time(process_id):
+    try:
+        data = request.json
+        tempo_estimado = data.get('tempo_estimado')
+        if tempo_estimado is not None:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute('UPDATE process SET tempo_estimado = ? WHERE id = ? AND status = "em andamento"', (tempo_estimado, process_id))
+            conn.commit()
+            conn.close()
+            return jsonify({'success': True})
+        else:
+            return jsonify({'success': False, 'error': 'tempo_estimado é obrigatório'}), 400
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 from routes import *
 
 if __name__ == "__main__":
