@@ -15,12 +15,12 @@ document.addEventListener("DOMContentLoaded", () => {
     initWaterLevel()
     initControls()
     initAlerts()
-
+  
     startDataFetching()
-
+  
     startSimulation()
   })
-
+  
   const simulationData = {
     temperature: 0,
     pressure: 0,
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
     useRealData: false,
     currentPlant: null,
   }
-
+  
   const plants = {
     lavanda: {
       name: "Lavanda",
@@ -64,31 +64,31 @@ document.addEventListener("DOMContentLoaded", () => {
       description: "Refrescante e medicinal",
     },
   }
-
+  
 
   function selectPlant(plantId, recommendedTemp, recommendedPressure) {
     simulationData.currentPlant = plantId
-
+  
     document.querySelector(".plant-name").innerText = plants[plantId].name
-
+  
     document.querySelector(".current-temp").textContent = `${recommendedTemp} °C`
-
+  
     addRecommendedIndicators(recommendedTemp, recommendedPressure)
-
+  
     simulationData.timeRemaining = 3600
     simulationData.progress = 0
     simulationData.isRunning = true
     document.getElementById("interruptBtn").innerHTML = '<span class="btn-icon">⏸️</span> Interromper'
-
+  
     document.querySelector(".time-display").textContent = formatTime(simulationData.timeRemaining)
-
+  
     window.updateProgressCircle(0)
-
+  
     addAlert("success", `Processo iniciado com ${plants[plantId].name}. ${plants[plantId].description}`)
-
+  
     publishMQTTCommand("plant", plantId)
   }
-
+  
   function addRecommendedIndicators(recommendedTemp, recommendedPressure) {
     const tempDisplay = document.querySelector(".temp-display")
     if (!tempDisplay.querySelector(".recommended-value")) {
@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       tempDisplay.querySelector(".recommended-value").textContent = `Meta: ${recommendedTemp}°C`
     }
-
+  
     const pressureDisplay = document.querySelector(".gauge-value")
     const pressureContainer = pressureDisplay.parentElement
     if (!pressureContainer.querySelector(".recommended-value")) {
@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
       pressureContainer.querySelector(".recommended-value").textContent = `Meta: ${recommendedPressure} Pa`
     }
   }
-
+  
   function publishMQTTCommand(command, value) {
     const payload = {
       command: command,
@@ -119,7 +119,7 @@ document.addEventListener("DOMContentLoaded", () => {
       timestamp: new Date().toISOString(),
     }
   }
-
+  
   function startDataFetching() {
     setInterval(updateBoardInfo, 2000)
 
@@ -180,23 +180,23 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((response) => response.json())
       .then((data) => {
         simulationData.useRealData = true
-
+  
         if (!simulationData.currentPlant) {
           document.querySelector(".plant-name").innerText = "Manjericão"
         }
-
+  
             const tempValue = parseFloat(data.temperatura) || 0
             document.querySelector(".temp-value").innerText = `${tempValue.toFixed(1)} °C`
         simulationData.temperature = tempValue
-
+  
         const waterLevel = data.nivel === "ALTO" ? 80 : 20
         simulationData.waterLevel = waterLevel
         window.updateWaterLevel(waterLevel)
-
+  
             const pressure = parseFloat(data.pressao_kPa) || 0
         simulationData.pressure = pressure
         window.updatePressureGauge(pressure)
-
+  
         if (!simulationData.alertShown) {
           addAlert("success", "Conectado ao broker MQTT. Dados reais sendo exibidos.")
           simulationData.alertShown = true
@@ -210,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       })
   }
-
+  
   let temperatureChart = null;
   let pressureChart = null;
 
@@ -679,7 +679,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
     window.updateProgressCircle = drawCircle
   }
-
+  
   function initTemperatureChart() {
     const canvas = document.getElementById("temperatureChart")
     const ctx = canvas.getContext("2d")
@@ -745,7 +745,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
     window.updateTemperatureChart = addDataPoint
   }
-
+  
   function initPressureGauge() {
     const canvas = document.getElementById("pressureGauge")
     const ctx = canvas.getContext("2d")
@@ -811,7 +811,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
     window.updatePressureGauge = drawGauge
   }
-
+  
   function initWaterLevel() {
     const waterFill = document.getElementById("waterFill")
   
@@ -829,7 +829,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
     window.updateWaterLevel = updateLevel
   }
-
+  
   function initControls() {
     const interruptBtn = document.getElementById("interruptBtn");
     if (interruptBtn) {
@@ -842,4 +842,62 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   }
+  
+  // --- Produção Modal ---
+  let producaoModalShown = false;
+  let massaPlantaUsada = 0; // Deve ser preenchido com o valor real do processo
+
+  function showProducaoModal(massaPlanta) {
+    massaPlantaUsada = massaPlanta;
+    producaoModalShown = true;
+    document.getElementById('producao-modal').style.display = 'block';
+  }
+
+  function hideProducaoModal() {
+    document.getElementById('producao-modal').style.display = 'none';
+  }
+
+  // Lógica para exibir o modal ao final do processo
+  function checkProcessEnd(timeRemaining, massaPlanta) {
+    if (timeRemaining <= 0 && !producaoModalShown) {
+      showProducaoModal(massaPlanta);
+    }
+  }
+
+  // Adicionar listeners ao modal de produção
+  function initProducaoModal() {
+    const form = document.getElementById('producao-form');
+    const inputVolume = form.querySelector('input[name="volume_extraido"]');
+    const inputRendimento = form.querySelector('input[name="rendimento"]');
+
+    // Calcular rendimento ao digitar volume
+    inputVolume.addEventListener('input', function() {
+      const volume = parseFloat(inputVolume.value.replace(',', '.'));
+      if (!volume || !massaPlantaUsada || massaPlantaUsada <= 0) {
+        inputRendimento.value = '';
+      } else {
+        const rendimento = (volume / massaPlantaUsada) * 100;
+        inputRendimento.value = rendimento.toFixed(2);
+      }
+    });
+
+    // Submissão do formulário
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      // Aqui você pode enviar os dados para o backend via AJAX
+      hideProducaoModal();
+      alert('Dados de produção salvos com sucesso!');
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initProducaoModal();
+    // Botão temporário para abrir o modal de produção
+    const btn = document.getElementById('abrir-producao-modal-btn');
+    if (btn) {
+      btn.addEventListener('click', function() {
+        showProducaoModal(100); // valor de massa de planta usado para teste
+      });
+    }
+  });
   

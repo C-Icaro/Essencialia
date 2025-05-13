@@ -68,6 +68,7 @@
         
         <!-- Main Content -->
         <main class="main-content">
+            <button id="abrir-producao-modal-btn" style="margin-bottom: 18px; padding: 10px 24px; border-radius: 8px; background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%); color: #fff; font-weight: 600; border: none; cursor: pointer;">Abrir modal de produção (teste)</button>
             <header class="header">
                 <h2>Dashboard</h2>
                 <div class="search-bar">
@@ -208,8 +209,8 @@
     </div>
     
     {% include 'components/novo_processo_modal.html' %}
+    {% include 'components/producao_modal.html' %}
     <script src="{{ url_for('static', filename='js/novo_processo_modal.js') }}"></script>
-    
     <script type="module" src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 </html>

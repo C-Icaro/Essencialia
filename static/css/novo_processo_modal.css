@@ -170,3 +170,99 @@
   padding-right: 32px !important;
   box-sizing: border-box;
 }
+
+/* Produção Modal (herda estilos do modal principal) */
+#producao-modal.modal {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  left: 0; top: 0; right: 0; bottom: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.18);
+  align-items: center;
+  justify-content: center;
+}
+#producao-modal .modal-content {
+  top: 3%;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  max-width: 480px;
+  width: 95%;
+  margin: auto;
+  padding: 36px 32px 28px 32px;
+  position: relative;
+  font-family: 'Inter', sans-serif;
+  animation: modalIn 0.2s;
+}
+#producao-modal h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 22px;
+  color: #232323;
+  text-align: left;
+}
+#producao-modal label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #222;
+  margin-top: 18px;
+  margin-bottom: 6px;
+  display: block;
+}
+#producao-modal input,
+#producao-modal select,
+#producao-modal textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 1rem;
+  margin-bottom: 10px;
+  background: #f7fafd;
+  color: #222;
+  outline: none;
+  transition: border 0.2s;
+  box-sizing: border-box;
+}
+#producao-modal input:focus,
+#producao-modal select:focus,
+#producao-modal textarea:focus {
+  border-color: #a3d8f4;
+  background: #fff;
+}
+#producao-modal textarea[readonly] {
+  background: #f7fafd;
+  color: #888;
+  font-size: 0.95rem;
+  resize: none;
+  border: 1.5px solid #e5e7eb;
+}
+#producao-modal .input-group {
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+#producao-modal .input-suffix {
+  position: absolute;
+  right: 14px;
+  color: #888;
+  font-size: 1rem;
+  pointer-events: none;
+}
+#producao-modal .finalizar-btn {
+  padding: 12px 36px;
+  border: none;
+  border-radius: 24px;
+  background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(56,249,215,0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+#producao-modal .finalizar-btn:hover {
+  background: linear-gradient(90deg, #38f9d7 0%, #43e97b 100%);
+  box-shadow: 0 4px 16px rgba(56,249,215,0.13);
+}
