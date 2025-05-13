@@ -6,6 +6,8 @@
     <title>Essenciália - Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
 </head>
 <body>
     <div class="container">
@@ -108,12 +110,12 @@
                     <h3>Temperatura</h3>
                     <div class="graph-subtitle">Temperatura ao longo do tempo</div>
                     <div class="graph-container">
-                        <canvas id="temperatureChart" width="600" height="250"></canvas>
+                        <canvas id="temperatureChart"></canvas>
                     </div>
                     <h3>Pressão</h3>
                     <div class="graph-subtitle">Pressão ao longo do tempo</div>
                     <div class="graph-container">
-                        <canvas id="pressureChart" width="600" height="250"></canvas>
+                        <canvas id="pressureChart"></canvas>
                     </div>
                 </section>
                 

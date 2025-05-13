@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     // Inicializar componentes
     initProgressCircle()
-    initTemperatureChart()
+    initCharts() // Inicializar gráficos primeiro
     initPressureGauge()
     initWaterLevel()
     initControls()
@@ -174,232 +174,260 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
   
+  // Iniciar busca de dados
+  function startDataFetching() {
+    // Atualizar dados MQTT a cada 2 segundos
+    setInterval(updateBoardInfo, 2000)
+    
+    // Atualizar gráficos e alertas a cada 2 segundos
+    setInterval(() => {
+        updateCharts()
+        fetchAlerts()
+    }, 2000)
+    
+    // Buscar dados iniciais
+    updateBoardInfo()
+    updateCharts()
+    fetchAlerts()
+  }
+  
+  // Função para atualizar os gráficos
+  function updateCharts() {
+    // Atualizar gráfico de temperatura
+    fetch('/temperature-data')
+        .then(response => response.json())
+        .then(data => {
+            if (!data.timestamps || !data.temperatures) {
+                console.error('Dados de temperatura inválidos:', data);
+                return;
+            }
+            
+            const chartData = data.timestamps.map((timestamp, index) => ({
+                x: new Date(timestamp).getTime(), // Converter para timestamp
+                y: parseFloat(data.temperatures[index])
+            }));
+            
+            if (temperatureChart) {
+                temperatureChart.data.datasets[0].data = chartData;
+                temperatureChart.update('none');
+            }
+        })
+        .catch(error => console.error('Erro ao buscar dados de temperatura:', error));
+
+    // Atualizar gráfico de pressão
+    fetch('/pressure-data')
+        .then(response => response.json())
+        .then(data => {
+            if (!data.timestamps || !data.pressures) {
+                console.error('Dados de pressão inválidos:', data);
+                return;
+            }
+            
+            const chartData = data.timestamps.map((timestamp, index) => ({
+                x: new Date(timestamp).getTime(), // Converter para timestamp
+                y: parseFloat(data.pressures[index])
+            }));
+            
+            if (pressureChart) {
+                pressureChart.data.datasets[0].data = chartData;
+                pressureChart.update('none');
+            }
+        })
+        .catch(error => console.error('Erro ao buscar dados de pressão:', error));
+  }
+  
   // Função para buscar dados MQTT
   function updateBoardInfo() {
     fetch("/mqtt-data")
-      .then((response) => response.json())
-      .then((data) => {
-        // Marcar que estamos usando dados reais
-        simulationData.useRealData = true
-  
-        // Atualizar nome da planta se não houver uma selecionada
-        if (!simulationData.currentPlant) {
-          document.querySelector(".plant-name").innerText = "Manjericão"
-        }
-  
-        // Atualizar temperatura
-        const tempValue = Number.parseFloat(data.temperatura)
-        document.querySelector(".temp-value").innerText = `${tempValue} °C`
-        simulationData.temperature = tempValue
-  
-        // Atualizar nível de água
-        const waterLevel = data.nivel === "ALTO" ? 80 : 20
-        simulationData.waterLevel = waterLevel
-        window.updateWaterLevel(waterLevel)
-  
-        // Atualizar pressão
-        const pressure = Number.parseFloat(data.pressao_kPa)
-        simulationData.pressure = pressure
-        window.updatePressureGauge(pressure)
-  
-        // Adicionar alerta de dados atualizados (apenas na primeira vez)
-        if (!simulationData.alertShown) {
-          addAlert("success", "Conectado ao broker MQTT. Dados reais sendo exibidos.")
-          simulationData.alertShown = true
-        }
-      })
-      .catch((error) => {
-        console.error("Erro ao buscar dados MQTT:", error)
-        if (simulationData.useRealData) {
-          addAlert("error", "Erro na conexão MQTT. Usando dados simulados.")
-          simulationData.useRealData = false
-        }
-      })
-  }
-  
-  // Variável global para armazenar o gráfico
-  const temperatureChart = null
-  
-  // Função para buscar dados históricos de temperatura
-  function fetchTemperatureData() {
-    fetch("/temperature-data")
-      .then((response) => response.json())
-      .then((data) => {
-        // Formatar os timestamps
-        const formattedTimestamps = data.timestamps.map((timestamp) => {
-          const date = new Date(timestamp)
-          return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}:${date.getSeconds().toString().padStart(2, "0")}` // Formato HH:mm:ss
+        .then((response) => response.json())
+        .then((data) => {
+            // Marcar que estamos usando dados reais
+            simulationData.useRealData = true
+
+            // Atualizar nome da planta se não houver uma selecionada
+            if (!simulationData.currentPlant) {
+                document.querySelector(".plant-name").innerText = "Manjericão"
+            }
+
+            // Atualizar temperatura
+            const tempValue = parseFloat(data.temperatura) || 0
+            document.querySelector(".temp-value").innerText = `${tempValue.toFixed(1)} °C`
+            simulationData.temperature = tempValue
+
+            // Atualizar nível de água
+            const waterLevel = data.nivel === "ALTO" ? 80 : 20
+            simulationData.waterLevel = waterLevel
+            window.updateWaterLevel(waterLevel)
+
+            // Atualizar pressão
+            const pressure = parseFloat(data.pressao_kPa) || 0
+            simulationData.pressure = pressure
+            window.updatePressureGauge(pressure)
+
+            // Adicionar alerta de dados atualizados (apenas na primeira vez)
+            if (!simulationData.alertShown) {
+                addAlert("success", "Conectado ao broker MQTT. Dados reais sendo exibidos.")
+                simulationData.alertShown = true
+            }
         })
-  
-        // Atualizar o gráfico de temperatura com dados reais
-        updateRealTemperatureChart(formattedTimestamps, data.temperatures)
-      })
-      .catch((error) => {
-        console.error("Erro ao buscar dados do gráfico:", error)
-      })
-  }
-  
-  // Função para atualizar o gráfico com dados reais
-  function updateRealTemperatureChart(timestamps, temperatures) {
-    console.log('Temperatura:', timestamps, temperatures);
-    const canvas = document.getElementById("temperatureChart")
-    const ctx = canvas.getContext("2d")
-  
-    // Limpar o canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-  
-    // Desenhar linhas de grade
-    const width = canvas.width
-    const height = canvas.height
-  
-    ctx.strokeStyle = "#e0e0e0"
-    ctx.lineWidth = 1
-  
-    // Linhas horizontais
-    for (let i = 0; i <= 4; i++) {
-      const y = height - (height / 4) * i
-      ctx.beginPath()
-      ctx.moveTo(0, y)
-      ctx.lineTo(width, y)
-      ctx.stroke()
-  
-      // Rótulos de temperatura
-      ctx.fillStyle = "#666"
-      ctx.font = "12px Inter"
-      ctx.textAlign = "right"
-      ctx.fillText(`${i * 25}°C`, 30, y - 5)
-    }
-  
-    // Linhas verticais e rótulos de tempo
-    const timeLabels =
-      timestamps.length > 3
-        ? [
-            timestamps[0],
-            timestamps[Math.floor(timestamps.length / 3)],
-            timestamps[Math.floor((timestamps.length * 2) / 3)],
-            timestamps[timestamps.length - 1],
-          ]
-        : timestamps
-  
-    for (let i = 0; i < timeLabels.length; i++) {
-      const x = (width / (timeLabels.length - 1)) * i
-      ctx.beginPath()
-      ctx.moveTo(x, 0)
-      ctx.lineTo(x, height)
-      ctx.stroke()
-  
-      // Rótulos de tempo
-      ctx.fillStyle = "#666"
-      ctx.font = "12px Inter"
-      ctx.textAlign = "center"
-      ctx.fillText(timeLabels[i], x, height - 5)
-    }
-  
-    // Desenhar linha de temperatura
-    if (temperatures.length > 0) {
-      const maxTemp = Math.max(...temperatures, 100) // Garantir que o máximo seja pelo menos 100
-  
-      ctx.beginPath()
-      ctx.moveTo(0, height - (temperatures[0] / maxTemp) * height)
-  
-      for (let i = 1; i < temperatures.length; i++) {
-        const x = (i / (temperatures.length - 1)) * width
-        const y = height - (temperatures[i] / maxTemp) * height
-        ctx.lineTo(x, y)
-      }
-  
-      ctx.strokeStyle = "#2196F3"
-      ctx.lineWidth = 2
-      ctx.stroke()
-    }
-  }
-  
-  // Função para buscar dados históricos de pressão
-  function fetchPressureData() {
-    fetch("/pressure-data")
-      .then((response) => response.json())
-      .then((data) => {
-        // Formatar os timestamps
-        const formattedTimestamps = data.timestamps.map((timestamp) => {
-          const date = new Date(timestamp)
-          return `${date.getHours().toString().padStart(2, "0")}:${date.getMinutes().toString().padStart(2, "0")}:${date.getSeconds().toString().padStart(2, "0")}` // Formato HH:mm:ss
+        .catch((error) => {
+            console.error("Erro ao buscar dados MQTT:", error)
+            if (simulationData.useRealData) {
+                addAlert("error", "Erro na conexão MQTT. Usando dados simulados.")
+                simulationData.useRealData = false
+            }
         })
-        // Atualizar o gráfico de pressão com dados reais
-        updateRealPressureChart(formattedTimestamps, data.pressures)
-      })
-      .catch((error) => {
-        console.error("Erro ao buscar dados do gráfico de pressão:", error)
-      })
   }
   
-  // Função para atualizar o gráfico de pressão com dados reais
-  function updateRealPressureChart(timestamps, pressures) {
-    console.log('Pressão:', timestamps, pressures);
-    const canvas = document.getElementById("pressureChart")
-    const ctx = canvas.getContext("2d")
-  
-    // Limpar o canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-  
-    // Desenhar linhas de grade
-    const width = canvas.width
-    const height = canvas.height
-  
-    ctx.strokeStyle = "#e0e0e0"
-    ctx.lineWidth = 1
-  
-    // Linhas horizontais
-    for (let i = 0; i <= 4; i++) {
-      const y = height - (height / 4) * i
-      ctx.beginPath()
-      ctx.moveTo(0, y)
-      ctx.lineTo(width, y)
-      ctx.stroke()
-      // Rótulos de pressão
-      ctx.fillStyle = "#666"
-      ctx.font = "12px Inter"
-      ctx.textAlign = "right"
-      ctx.fillText(`${i * 10} kPa`, 30, y - 5)
-    }
-  
-    // Linhas verticais e rótulos de tempo
-    const timeLabels =
-      timestamps.length > 3
-        ? [
-            timestamps[0],
-            timestamps[Math.floor(timestamps.length / 3)],
-            timestamps[Math.floor((timestamps.length * 2) / 3)],
-            timestamps[timestamps.length - 1],
-          ]
-        : timestamps
-  
-    for (let i = 0; i < timeLabels.length; i++) {
-      const x = (width / (timeLabels.length - 1)) * i
-      ctx.beginPath()
-      ctx.moveTo(x, 0)
-      ctx.lineTo(x, height)
-      ctx.stroke()
-      // Rótulos de tempo
-      ctx.fillStyle = "#666"
-      ctx.font = "12px Inter"
-      ctx.textAlign = "center"
-      ctx.fillText(timeLabels[i], x, height - 5)
-    }
-  
-    // Desenhar linha de pressão
-    if (pressures.length > 0) {
-      const maxPressure = Math.max(...pressures, 40) // Garantir que o máximo seja pelo menos 40
-      ctx.beginPath()
-      ctx.moveTo(0, height - (pressures[0] / maxPressure) * height)
-      for (let i = 1; i < pressures.length; i++) {
-        const x = (i / (pressures.length - 1)) * width
-        const y = height - (pressures[i] / maxPressure) * height
-        ctx.lineTo(x, y)
-      }
-      ctx.strokeStyle = "#FF5722" // Cor laranja para diferenciar da temperatura
-      ctx.lineWidth = 2
-      ctx.stroke()
-    }
+  // Configuração dos gráficos
+  let temperatureChart = null;
+  let pressureChart = null;
+
+  function initCharts() {
+    // Configuração comum para ambos os gráficos
+    const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+            duration: 750,
+            easing: 'easeInOutQuart'
+        },
+        interaction: {
+            intersect: false,
+            mode: 'index'
+        },
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                padding: 10,
+                titleFont: {
+                    size: 14
+                },
+                bodyFont: {
+                    size: 13
+                },
+                callbacks: {
+                    title: function(context) {
+                        const date = new Date(context[0].parsed.x);
+                        return date.toLocaleTimeString('pt-BR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                        });
+                    }
+                }
+            }
+        },
+        scales: {
+            x: {
+                type: 'time',
+                time: {
+                    unit: 'second',
+                    displayFormats: {
+                        second: 'HH:mm:ss'
+                    },
+                    tooltipFormat: 'HH:mm:ss'
+                },
+                adapters: {
+                    date: {
+                        locale: 'pt-BR'
+                    }
+                },
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    maxRotation: 0,
+                    autoSkip: true,
+                    maxTicksLimit: 6,
+                    source: 'auto',
+                    callback: function(value) {
+                        const date = new Date(value);
+                        return date.toLocaleTimeString('pt-BR', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            second: '2-digit',
+                            hour12: false
+                        });
+                    }
+                }
+            },
+            y: {
+                beginAtZero: false,
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.1)'
+                }
+            }
+        }
+    };
+
+    // Inicializar gráfico de temperatura
+    const tempCtx = document.getElementById('temperatureChart').getContext('2d');
+    temperatureChart = new Chart(tempCtx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: 'Temperatura',
+                data: [],
+                borderColor: '#FF6B6B',
+                backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            ...commonOptions,
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: {
+                        display: true,
+                        text: 'Temperatura (°C)'
+                    }
+                }
+            }
+        }
+    });
+
+    // Inicializar gráfico de pressão
+    const pressureCtx = document.getElementById('pressureChart').getContext('2d');
+    pressureChart = new Chart(pressureCtx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: 'Pressão',
+                data: [],
+                borderColor: '#4ECDC4',
+                backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                borderWidth: 2,
+                pointRadius: 3,
+                pointHoverRadius: 5,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            ...commonOptions,
+            scales: {
+                ...commonOptions.scales,
+                y: {
+                    ...commonOptions.scales.y,
+                    title: {
+                        display: true,
+                        text: 'Pressão (kPa)'
+                    }
+                }
+            }
+        }
+    });
   }
   
   // Inicializar alertas
@@ -508,6 +536,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const now = new Date();
     const diff = now - date;
     
+    // Formatar a data para o fuso horário local
+    const localTime = date.toLocaleTimeString('pt-BR', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
+    
     // Se for menos de 1 minuto
     if (diff < 60000) {
         return 'Agora mesmo';
@@ -515,15 +551,23 @@ document.addEventListener("DOMContentLoaded", () => {
     // Se for menos de 1 hora
     if (diff < 3600000) {
         const minutes = Math.floor(diff / 60000);
-        return `${minutes} minuto${minutes > 1 ? 's' : ''} atrás`;
+        return `${minutes} minuto${minutes > 1 ? 's' : ''} atrás (${localTime})`;
     }
     // Se for menos de 24 horas
     if (diff < 86400000) {
         const hours = Math.floor(diff / 3600000);
-        return `${hours} hora${hours > 1 ? 's' : ''} atrás`;
+        return `${hours} hora${hours > 1 ? 's' : ''} atrás (${localTime})`;
     }
     // Se for mais de 24 horas, mostrar data e hora
-    return date.toLocaleString();
+    return date.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+    });
   }
   
   // Função para adicionar um novo alerta
@@ -626,22 +670,6 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("interruptBtn").innerHTML = '<span class="btn-icon">▶️</span> Reiniciar'
       }
     }, 1000)
-  }
-  
-  // Iniciar busca de dados
-  function startDataFetching() {
-    // Atualizar dados MQTT a cada 2 segundos
-    setInterval(updateBoardInfo, 2000)
-    // Atualizar gráficos a cada 10 segundos
-    setInterval(fetchTemperatureData, 10000)
-    setInterval(fetchPressureData, 10000)
-    // Atualizar alertas a cada 5 segundos
-    setInterval(fetchAlerts, 5000)
-    // Buscar dados iniciais
-    updateBoardInfo()
-    fetchTemperatureData()
-    fetchPressureData()
-    fetchAlerts()
   }
   
   // Inicializar o círculo de progresso

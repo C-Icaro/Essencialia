@@ -2,6 +2,17 @@ from app import app  # Importando o objeto app do arquivo app.py
 from flask import render_template, jsonify  # Importando render_template e jsonify
 from mqtt.mqtt_handler import mqtt_data  # Importando mqtt_data
 import sqlite3  # Importando sqlite3
+from datetime import datetime, timedelta
+
+# Função para converter UTC para horário de Manaus (UTC-4)
+def convert_to_manaus_time(utc_timestamp):
+    # Converter string para datetime se necessário
+    if isinstance(utc_timestamp, str):
+        utc_timestamp = datetime.fromisoformat(utc_timestamp.replace('Z', '+00:00'))
+    
+    # Ajustar para horário de Manaus (UTC-4)
+    manaus_time = utc_timestamp - timedelta(hours=4)
+    return manaus_time.isoformat()
 
 # Definindo rotas do web server
 
@@ -41,9 +52,9 @@ def get_temperature_data():
     rows = cursor.fetchall()
     conn.close()
 
-    # Formatar os dados para o gráfico
+    # Formatar os dados para o gráfico, convertendo timestamps
     data = {
-        "timestamps": [row[0] for row in rows],
+        "timestamps": [convert_to_manaus_time(row[0]) for row in rows],
         "temperatures": [row[1] for row in rows]
     }
     return jsonify(data)
@@ -55,8 +66,10 @@ def get_pressure_data():
     cursor.execute("SELECT timestamp, value FROM sensor_data WHERE sensor_type = 'pressure' ORDER BY timestamp ASC")
     rows = cursor.fetchall()
     conn.close()
+    
+    # Formatar os dados para o gráfico, convertendo timestamps
     data = {
-        "timestamps": [row[0] for row in rows],
+        "timestamps": [convert_to_manaus_time(row[0]) for row in rows],
         "pressures": [row[1] for row in rows]
     }
     return jsonify(data)
@@ -65,7 +78,6 @@ def get_pressure_data():
 def get_alerts():
     conn = sqlite3.connect("data.db")
     cursor = conn.cursor()
-    # Buscar os últimos 10 alertas não resolvidos
     cursor.execute("""
         SELECT id, timestamp, alert_type, message, is_resolved 
         FROM alerts 
@@ -78,7 +90,7 @@ def get_alerts():
     
     alerts = [{
         "id": row[0],
-        "timestamp": row[1],
+        "timestamp": convert_to_manaus_time(row[1]),
         "type": row[2],
         "message": row[3],
         "is_resolved": bool(row[4])
