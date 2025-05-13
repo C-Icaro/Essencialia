@@ -1,286 +1,231 @@
-document.addEventListener("DOMContentLoaded", () => {
-    initPlantSelection();
-    initFilters();
-    loadCurrentProcess();
-    loadPreviousCycles();
-    initPagination();
-});
-
-// Dados simulados de ciclos anteriores
-const allCycles = [
-    { plant: "Lavanda", part: "Flor", date: "15/05/2023", time: "14:30", status: "Concluído" },
-    { plant: "Eucalipto", part: "Folha", date: "12/05/2023", time: "09:45", status: "Concluído" },
-    { plant: "Alecrim", part: "Caule", date: "08/05/2023", time: "16:20", status: "Interrompido" },
-    { plant: "Manjericão", part: "Raiz", date: "03/05/2023", time: "11:10", status: "Concluído" },
-    { plant: "Hortelã", part: "Folha", date: "28/04/2023", time: "13:55", status: "Interrompido" },
-    { plant: "Lavanda", part: "Caule", date: "25/04/2023", time: "10:15", status: "Concluído" },
-    { plant: "Eucalipto", part: "Casca", date: "20/04/2023", time: "15:40", status: "Concluído" },
-    { plant: "Alecrim", part: "Folha", date: "18/04/2023", time: "09:30", status: "Interrompido" },
-    { plant: "Manjericão", part: "Flor", date: "15/04/2023", time: "14:20", status: "Concluído" },
-    { plant: "Hortelã", part: "Caule", date: "10/04/2023", time: "11:45", status: "Concluído" },
-    { plant: "Lavanda", part: "Raiz", date: "05/04/2023", time: "16:10", status: "Interrompido" },
-    { plant: "Eucalipto", part: "Flor", date: "01/04/2023", time: "10:30", status: "Concluído" },
-    { plant: "Alecrim", part: "Casca", date: "28/03/2023", time: "13:15", status: "Concluído" },
-    { plant: "Manjericão", part: "Caule", date: "25/03/2023", time: "09:50", status: "Interrompido" },
-    { plant: "Hortelã", part: "Folha", date: "20/03/2023", time: "15:25", status: "Concluído" }
+// --- Simulação de dados de extrações ---
+const extracoes = [
+  {
+    id: 12345,
+    plant_id: 1,
+    nome_planta: 'Lavanda',
+    parte_utilizada: 'Flor',
+    quantidade_materia_prima: 120,
+    temp_min: 80,
+    temp_max: 90,
+    start_time: '2024-06-01T08:00:00',
+    end_time: '2024-06-01T10:10:00',
+    operator: 'João',
+    volume_extraido: 8.5,
+    rendimento: 7.08,
+    notas_operador: 'Processo normal, sem intercorrências.',
+    status: 'finalizado',
+    falha: {
+      tipo: '-',
+      horario: '-',
+      duracao: '-',
+      solucao: '-'
+    },
+    temperatura: [80, 82, 85, 87, 89, 90, 88, 86, 85, 84],
+    pressao: [20, 22, 25, 27, 29, 30, 28, 27, 26, 25],
+    niveis_agua: [80, 75, 70, 65, 60, 55, 50, 45, 40, 35],
+    fases: {
+      aquecimento: 1800, // segundos
+      destilacao: 3000,
+      resfriamento: 1200
+    }
+  },
+  {
+    id: 12346,
+    plant_id: 2,
+    nome_planta: 'Eucalipto',
+    parte_utilizada: 'Folha',
+    quantidade_materia_prima: 150,
+    temp_min: 85,
+    temp_max: 95,
+    start_time: '2024-06-02T09:00:00',
+    end_time: '2024-06-02T11:00:00',
+    operator: 'Maria',
+    volume_extraido: 10.2,
+    rendimento: 6.8,
+    notas_operador: 'Pequena oscilação de pressão.',
+    status: 'finalizado',
+    falha: {
+      tipo: 'Oscilação de pressão',
+      horario: '09:45:00',
+      duracao: '00h 10min 00sec',
+      solucao: 'Ajuste manual da válvula.'
+    },
+    temperatura: [85, 87, 90, 92, 95, 93, 91, 90, 89, 88],
+    pressao: [22, 24, 27, 29, 32, 30, 28, 27, 26, 25],
+    niveis_agua: [90, 85, 80, 75, 70, 65, 60, 55, 50, 45],
+    fases: {
+      aquecimento: 2000,
+      destilacao: 3200,
+      resfriamento: 1000
+    }
+  }
 ];
 
-// Variáveis para paginação
-let currentPage = 1;
-const itemsPerPage = 5;
-let filteredCycles = [...allCycles];
-
-// Inicializar seleção de plantas
-function initPlantSelection() {
-    // Abrir modal ao clicar no botão "Iniciar novo processo"
-    document.querySelector(".new-process-btn").addEventListener("click", () => {
-        document.getElementById("plantSelectionModal").style.display = "block";
-    });
-
-    // Fechar modal ao clicar no X
-    document.querySelector(".close-modal").addEventListener("click", () => {
-        document.getElementById("plantSelectionModal").style.display = "none";
-    });
-
-    // Fechar modal ao clicar fora dele
-    window.addEventListener("click", (event) => {
-        if (event.target === document.getElementById("plantSelectionModal")) {
-            document.getElementById("plantSelectionModal").style.display = "none";
-        }
-    });
-
-    // Adicionar evento de clique aos cards de plantas
-    document.querySelectorAll(".plant-card").forEach(card => {
-        card.addEventListener("click", () => {
-            // Remover seleção anterior
-            document.querySelectorAll(".plant-card").forEach(c => c.classList.remove("selected"));
-            
-            // Adicionar seleção ao card clicado
-            card.classList.add("selected");
-            
-            // Obter dados da planta
-            const plantId = card.dataset.plant;
-            
-            // Redirecionar para o dashboard com a planta selecionada
-            setTimeout(() => {
-                window.location.href = `dashboard?plant=${plantId}`;
-            }, 500);
-        });
-    });
+// --- Utilitários ---
+function formatDateTime(dt) {
+  if (!dt) return '-';
+  const d = new Date(dt);
+  return d.toLocaleDateString('pt-BR') + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+function formatDate(dt) {
+  if (!dt) return '-';
+  const d = new Date(dt);
+  return d.toLocaleDateString('pt-BR');
+}
+function formatTime(dt) {
+  if (!dt) return '-';
+  const d = new Date(dt);
+  return d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+function formatDuracao(segundos) {
+  if (!segundos || isNaN(segundos)) return '-';
+  const h = Math.floor(segundos / 3600);
+  const m = Math.floor((segundos % 3600) / 60);
+  const s = segundos % 60;
+  return `${h}h ${m.toString().padStart(2, '0')}min ${s.toString().padStart(2, '0')}sec`;
 }
 
-// Inicializar filtros
-function initFilters() {
-    const plantFilter = document.getElementById("filter-plant");
-    const statusFilter = document.getElementById("filter-status");
-    const searchInput = document.getElementById("search-history");
-    
-    // Função para aplicar filtros
-    const applyFilters = () => {
-        const plantValue = plantFilter.value;
-        const statusValue = statusFilter.value;
-        const searchValue = searchInput.value.toLowerCase().trim();
-        
-        // Filtrar ciclos
-        filteredCycles = allCycles.filter(cycle => {
-            const matchPlant = plantValue === "" || cycle.plant === plantValue;
-            const matchStatus = statusValue === "" || cycle.status === statusValue;
-            const matchSearch = searchValue === "" || 
-                cycle.plant.toLowerCase().includes(searchValue) || 
-                cycle.part.toLowerCase().includes(searchValue) || 
-                cycle.date.includes(searchValue);
-            
-            return matchPlant && matchStatus && matchSearch;
-        });
-        
-        // Resetar paginação
-        currentPage = 1;
-        updatePagination();
-        displayCycles();
-    };
-    
-    // Adicionar eventos aos filtros
-    plantFilter.addEventListener("change", applyFilters);
-    statusFilter.addEventListener("change", applyFilters);
-    searchInput.addEventListener("input", applyFilters);
+// --- Preencher dropdown de extrações ---
+function preencherDropdown() {
+  const select = document.getElementById('extracao-select');
+  select.innerHTML = '';
+  extracoes.forEach((extracao, idx) => {
+    const opt = document.createElement('option');
+    opt.value = idx;
+    opt.textContent = `#${extracao.id}`;
+    select.appendChild(opt);
+  });
 }
 
-// Inicializar paginação
-function initPagination() {
-    const prevButton = document.getElementById("prev-page");
-    const nextButton = document.getElementById("next-page");
-    
-    prevButton.addEventListener("click", () => {
-        if (currentPage > 1) {
-            currentPage--;
-            displayCycles();
-            updatePagination();
-        }
-    });
-    
-    nextButton.addEventListener("click", () => {
-        const totalPages = Math.ceil(filteredCycles.length / itemsPerPage);
-        if (currentPage < totalPages) {
-            currentPage++;
-            displayCycles();
-            updatePagination();
-        }  {
-            currentPage++;
-            displayCycles();
-            updatePagination();
-        }
-    });
-    
-    updatePagination();
+// --- Atualizar todos os campos/cards/gráficos ---
+let tempChart = null;
+let pressChart = null;
+let niveisChart = null;
+
+function atualizarPainel(idx) {
+  const extracao = extracoes[idx];
+  // Linha 1
+  document.getElementById('hora-inicial').textContent = formatTime(extracao.start_time);
+  document.getElementById('data-inicial').textContent = formatDate(extracao.start_time);
+  document.getElementById('hora-final').textContent = formatTime(extracao.end_time);
+  document.getElementById('data-final').textContent = formatDate(extracao.end_time);
+  // Duração total
+  const duracaoTotal = (new Date(extracao.end_time) - new Date(extracao.start_time)) / 1000;
+  document.getElementById('duracao-total').textContent = formatDuracao(duracaoTotal);
+  // Linha 2
+  document.getElementById('nome-planta').textContent = extracao.nome_planta;
+  document.getElementById('tipo-materia').textContent = extracao.parte_utilizada;
+  document.getElementById('quantidade-utilizada').textContent = `${extracao.quantidade_materia_prima} gramas`;
+  // Falhas
+  document.getElementById('tipo-falha').textContent = extracao.falha.tipo;
+  document.getElementById('horario-falha').textContent = extracao.falha.horario;
+  document.getElementById('duracao-falha').textContent = extracao.falha.duracao;
+  document.getElementById('solucao-falha').textContent = extracao.falha.solucao;
+  // Linha 3
+  document.getElementById('volume-extraido').textContent = `${extracao.volume_extraido} ml`;
+  document.getElementById('rendimento').textContent = `${extracao.rendimento} %`;
+  document.getElementById('notas-operador').textContent = extracao.notas_operador;
+  // Linha 4 - Temperatura
+  const tempMedia = (extracao.temperatura.reduce((a,b)=>a+b,0)/extracao.temperatura.length).toFixed(1);
+  const tempMax = Math.max(...extracao.temperatura);
+  document.getElementById('temp-media').textContent = `${tempMedia} °C`;
+  document.getElementById('temp-max').textContent = `${tempMax} °C`;
+  // Linha 4 - Pressão
+  const pressMedia = (extracao.pressao.reduce((a,b)=>a+b,0)/extracao.pressao.length).toFixed(1);
+  const pressMax = Math.max(...extracao.pressao);
+  document.getElementById('pressao-media').textContent = `${pressMedia} KPa`;
+  document.getElementById('pressao-max').textContent = `${pressMax} KPa`;
+  // Gráficos
+  atualizarGraficos(extracao);
+  // Fases
+  document.getElementById('tempo-aquecimento').textContent = formatDuracao(extracao.fases.aquecimento);
+  document.getElementById('tempo-destilacao').textContent = formatDuracao(extracao.fases.destilacao);
+  document.getElementById('tempo-resfriamento').textContent = formatDuracao(extracao.fases.resfriamento);
 }
 
-// Atualizar controles de paginação
-function updatePagination() {
-    const totalPages = Math.ceil(filteredCycles.length / itemsPerPage);
-    
-    document.getElementById("current-page").textContent = currentPage;
-    document.getElementById("total-pages").textContent = totalPages;
-    
-    // Habilitar/desabilitar botões de paginação
-    document.getElementById("prev-page").disabled = currentPage === 1;
-    document.getElementById("next-page").disabled = currentPage === totalPages;
-}
-
-// Carregar processo atual
-function loadCurrentProcess() {
-    // Verificar se há um processo em andamento (simulado)
-    const hasActiveProcess = Math.random() > 0.3; // 70% de chance de ter um processo ativo
-    
-    if (hasActiveProcess) {
-        // Plantas disponíveis
-        const plants = ["Lavanda", "Eucalipto", "Alecrim", "Manjericão", "Hortelã"];
-        const parts = ["Folha", "Caule", "Flor", "Raiz", "Casca"];
-        
-        // Selecionar planta e parte aleatoriamente
-        const plant = plants[Math.floor(Math.random() * plants.length)];
-        const part = parts[Math.floor(Math.random() * parts.length)];
-        
-        // Gerar data e hora atual
-        const now = new Date();
-        const date = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
-        const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-        
-        // Atualizar tabela de processo atual
-        const tbody = document.getElementById("current-process-body");
-        tbody.innerHTML = "";
-        
-        const row = document.createElement("tr");
-        
-        // Criar células
-        const plantCell = document.createElement("td");
-        plantCell.textContent = plant;
-        
-        const partCell = document.createElement("td");
-        partCell.textContent = part;
-        
-        const dateCell = document.createElement("td");
-        dateCell.textContent = date;
-        
-        const timeCell = document.createElement("td");
-        timeCell.textContent = time;
-        
-        const verifyCell = document.createElement("td");
-        const verifyLink = document.createElement("a");
-        verifyLink.href = "dashboard";
-        verifyLink.className = "verify-btn";
-        verifyLink.textContent = "Acessar";
-        verifyCell.appendChild(verifyLink);
-        
-        const statusCell = document.createElement("td");
-        const statusBadge = document.createElement("span");
-        statusBadge.className = "status-badge operating";
-        statusBadge.textContent = "Operando";
-        statusCell.appendChild(statusBadge);
-        
-        // Adicionar células à linha
-        row.appendChild(plantCell);
-        row.appendChild(partCell);
-        row.appendChild(dateCell);
-        row.appendChild(timeCell);
-        row.appendChild(verifyCell);
-        row.appendChild(statusCell);
-        
-        // Adicionar linha à tabela
-        tbody.appendChild(row);
-        
-        // Exibir seção de processo atual
-        document.querySelector(".current-process").style.display = "block";
-    } else {
-        // Ocultar seção de processo atual se não houver processo ativo
-        document.querySelector(".current-process").style.display = "none";
+function atualizarGraficos(extracao) {
+  // Temperatura
+  const tempCtx = document.getElementById('grafico-temperatura').getContext('2d');
+  if (tempChart) tempChart.destroy();
+  tempChart = new Chart(tempCtx, {
+    type: 'line',
+    data: {
+      labels: extracao.temperatura.map((_,i)=>`${i+1}`),
+      datasets: [{
+        label: 'Temperatura',
+        data: extracao.temperatura,
+        borderColor: '#fbbf24',
+        backgroundColor: 'rgba(251,191,36,0.08)',
+        borderWidth: 2,
+        pointRadius: 2,
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: { beginAtZero: false, grid: { color: '#eee' } }
+      }
     }
-}
-
-// Carregar ciclos anteriores
-function loadPreviousCycles() {
-    displayCycles();
-}
-
-// Exibir ciclos com paginação
-function displayCycles() {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const paginatedCycles = filteredCycles.slice(startIndex, endIndex);
-    
-    // Atualizar tabela com dados paginados
-    const tbody = document.getElementById("previous-cycles-body");
-    tbody.innerHTML = "";
-    
-    if (paginatedCycles.length === 0) {
-        const row = document.createElement("tr");
-        const cell = document.createElement("td");
-        cell.colSpan = 6;
-        cell.textContent = "Nenhum registro encontrado.";
-        cell.style.textAlign = "center";
-        cell.style.padding = "20px";
-        row.appendChild(cell);
-        tbody.appendChild(row);
-        return;
+  });
+  // Pressão
+  const pressCtx = document.getElementById('grafico-pressao').getContext('2d');
+  if (pressChart) pressChart.destroy();
+  pressChart = new Chart(pressCtx, {
+    type: 'line',
+    data: {
+      labels: extracao.pressao.map((_,i)=>`${i+1}`),
+      datasets: [{
+        label: 'Pressão',
+        data: extracao.pressao,
+        borderColor: '#f87171',
+        backgroundColor: 'rgba(248,113,113,0.08)',
+        borderWidth: 2,
+        pointRadius: 2,
+        tension: 0.4,
+        fill: true
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: { beginAtZero: false, grid: { color: '#eee' } }
+      }
     }
-    
-    paginatedCycles.forEach(cycle => {
-        const row = document.createElement("tr");
-        
-        // Criar células
-        const plantCell = document.createElement("td");
-        plantCell.textContent = cycle.plant;
-        
-        const partCell = document.createElement("td");
-        partCell.textContent = cycle.part;
-        
-        const dateCell = document.createElement("td");
-        dateCell.textContent = cycle.date;
-        
-        const timeCell = document.createElement("td");
-        timeCell.textContent = cycle.time;
-        
-        const verifyCell = document.createElement("td");
-        const verifyLink = document.createElement("a");
-        verifyLink.href = "#";
-        verifyLink.className = "verify-btn";
-        verifyLink.textContent = "Acessar";
-        verifyCell.appendChild(verifyLink);
-        
-        const statusCell = document.createElement("td");
-        const statusBadge = document.createElement("span");
-        statusBadge.className = `status-badge ${cycle.status === "Concluído" ? "completed" : "interrupted"}`;
-        statusBadge.textContent = cycle.status;
-        statusCell.appendChild(statusBadge);
-        
-        // Adicionar células à linha
-        row.appendChild(plantCell);
-        row.appendChild(partCell);
-        row.appendChild(dateCell);
-        row.appendChild(timeCell);
-        row.appendChild(verifyCell);
-        row.appendChild(statusCell);
-        
-        // Adicionar linha à tabela
-        tbody.appendChild(row);
-    });
+  });
+  // Níveis de água
+  const niveisCtx = document.getElementById('grafico-niveis').getContext('2d');
+  if (niveisChart) niveisChart.destroy();
+  niveisChart = new Chart(niveisCtx, {
+    type: 'bar',
+    data: {
+      labels: extracao.niveis_agua.map((_,i)=>`${10+i} am`),
+      datasets: [{
+        label: 'Nível de água',
+        data: extracao.niveis_agua,
+        backgroundColor: ['#6ee7b7','#fbbf24','#f87171','#60a5fa','#a7f3d0','#fde68a','#fbbf24','#6ee7b7','#60a5fa','#a7f3d0'],
+        borderRadius: 8
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false } },
+        y: { beginAtZero: true, grid: { color: '#eee' } }
+      }
+    }
+  });
 }
+
+// --- Inicialização ---
+document.addEventListener('DOMContentLoaded', () => {
+  preencherDropdown();
+  atualizarPainel(0);
+  document.getElementById('extracao-select').addEventListener('change', function() {
+    atualizarPainel(this.value);
+  });
+});

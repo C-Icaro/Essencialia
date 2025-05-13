@@ -4,10 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Essenciália - Histórico</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/historico.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/historico.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/novo_processo_modal.css') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="container">
@@ -59,7 +60,7 @@
         </aside>
         
         <!-- Main Content -->
-        <main class="main-content">
+        <main class="main-content historico-main">
             <header class="header">
                 <h2>Histórico</h2>
                 <div class="search-bar">
@@ -68,143 +69,99 @@
                 </div>
             </header>
             
-            <!-- Histórico Content -->
-            <div class="historico-content">
-                <!-- Em andamento Section -->
-                <section class="current-process">
-                    <h3 class="section-title">Em andamento</h3>
-                    
-                    <div class="process-table">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Nome da planta</th>
-                                    <th>Parte utilizada</th>
-                                    <th>Data</th>
-                                    <th>Hora</th>
-                                    <th>Verificar</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="current-process-body">
-                                <tr>
-                                    <!--Atualizar tópicos de publish e request-->
-                                    <td>Planta</td>
-                                    <td>Parte</td>
-                                    <td>00/00/0000</td>
-                                    <td>00:00</td>
-                                    <td><a href="dashboard" class="verify-btn">Acessar</a></td>
-                                    <td><span class="status-badge operating">Operando</span></td>
-                                </tr>
-                            </tbody>
-                        </table>
+            <div class="historico-detalhado-grid">
+                <!-- Linha 1: Dados da extração -->
+                <div class="extracao-cards-row">
+                    <div class="extracao-card green">
+                        <div class="extracao-label">ID Da Extração</div>
+                        <select id="extracao-select"></select>
                     </div>
-                </section>
-                
-                <!-- Ciclos anteriores Section -->
-                <section class="previous-cycles">
-                    <div class="section-header">
-                        <h3 class="section-title">Ciclos anteriores</h3>
-                        <div class="filter-container">
-                            <div class="filter-group">
-                                <label for="filter-plant">Planta:</label>
-                                <select id="filter-plant" class="filter-select">
-                                    <option value="">Todas</option>
-                                    <option value="Lavanda">Lavanda</option>
-                                    <option value="Eucalipto">Eucalipto</option>
-                                    <option value="Alecrim">Alecrim</option>
-                                    <option value="Manjericão">Manjericão</option>
-                                    <option value="Hortelã">Hortelã</option>
-                                </select>
+                    <div class="extracao-card blue">
+                        <div class="extracao-label">Hora inicial</div>
+                        <div class="extracao-hora-inicial" id="hora-inicial">00:00</div>
+                        <div class="extracao-data-inicial" id="data-inicial">00/00/0000</div>
+                    </div>
+                    <div class="extracao-card yellow">
+                        <div class="extracao-label">Hora do Término</div>
+                        <div class="extracao-hora-final" id="hora-final">00:00</div>
+                        <div class="extracao-data-final" id="data-final">00/00/0000</div>
+                    </div>
+                    <div class="extracao-card green-light">
+                        <div class="extracao-label">Duração Total</div>
+                        <div class="extracao-duracao" id="duracao-total">0h 00min 00sec</div>
+                    </div>
+                </div>
+                <!-- Linha 2: Informações da planta e análise de falhas -->
+                <div class="info-falha-row">
+                    <div class="info-planta-card">
+                        <div class="info-title">Informações da planta</div>
+                        <div class="info-item"><span>Nome da planta</span><div id="nome-planta">Nome da planta</div></div>
+                        <div class="info-item"><span>Tipo de matéria-prima</span><div id="tipo-materia">Folha/Caule/Flor</div></div>
+                        <div class="info-item"><span>Quantidade utilizada</span><div id="quantidade-utilizada">000 gramas</div></div>
+                    </div>
+                    <div class="falha-card">
+                        <div class="info-title">Análise de Falhas</div>
+                        <div class="info-item"><span>Tipo de falha</span><div id="tipo-falha">-</div></div>
+                        <div class="info-item"><span>Horário da falha</span><div id="horario-falha">00:00:00</div></div>
+                        <div class="info-item"><span>Duração da falha</span><div id="duracao-falha">0h 00min 00sec</div></div>
+                        <div class="info-item"><span>Solução aplicada</span><div id="solucao-falha">-</div></div>
+                    </div>
+                </div>
+                <!-- Linha 3: Produção -->
+                <div class="producao-row">
+                    <div class="producao-card">
+                        <div class="producao-label">Volume de óleo extraído</div>
+                        <div class="producao-value" id="volume-extraido">00 g</div>
+                    </div>
+                    <div class="producao-card">
+                        <div class="producao-label">Rendimento</div>
+                        <div class="producao-value" id="rendimento">00 %</div>
+                    </div>
+                    <div class="producao-card">
+                        <div class="producao-label">Observações</div>
+                        <div class="producao-value" id="notas-operador">"Notas do operador"</div>
+                    </div>
+                </div>
+                <!-- Linha 4: Parâmetros e gráficos -->
+                <div class="parametros-row">
+                    <div class="parametros-card">
+                        <div class="parametros-title">Parâmetros da extração</div>
+                        <div class="parametros-grafico">
+                            <div class="parametros-grafico-label">Temperatura</div>
+                            <canvas id="grafico-temperatura"></canvas>
+                            <div class="parametros-info">
+                                <div>Temperatura Média<br><span id="temp-media">00 °C</span></div>
+                                <div>Temperatura Máxima<br><span id="temp-max">00 °C</span></div>
                             </div>
-                            
-                            <div class="filter-group">
-                                <label for="filter-status">Status:</label>
-                                <select id="filter-status" class="filter-select">
-                                    <option value="">Todos</option>
-                                    <option value="Concluído">Concluído</option>
-                                    <option value="Interrompido">Interrompido</option>
-                                </select>
-                            </div>
-                            
-                            <div class="filter-group">
-                                <input type="text" id="search-history" placeholder="Pesquisar no histórico" class="history-search">
+                        </div>
+                        <div class="parametros-grafico">
+                            <div class="parametros-grafico-label">Pressão</div>
+                            <canvas id="grafico-pressao"></canvas>
+                            <div class="parametros-info">
+                                <div>Pressão Média<br><span id="pressao-media">00 KPa</span></div>
+                                <div>Pressão Máxima<br><span id="pressao-max">00 KPa</span></div>
                             </div>
                         </div>
                     </div>
-                    
-                    <div class="cycles-table">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Nome da planta</th>
-                                    <th>Parte utilizada</th>
-                                    <th>Data</th>
-                                    <th>Hora</th>
-                                    <th>Verificar</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="previous-cycles-body">
-                                <!-- Dados serão carregados via JavaScript -->
-                            </tbody>
-                        </table>
+                    <div class="fases-niveis-col">
+                        <div class="fases-card">
+                            <div class="fases-title">Tempo em cada fase</div>
+                            <div class="fase-item"><span class="fase-icone">🔥</span> Aquecimento <span class="fase-tempo" id="tempo-aquecimento">0h 00min 00sec</span></div>
+                            <div class="fase-item"><span class="fase-icone">💧</span> Destilação <span class="fase-tempo" id="tempo-destilacao">0h 00min 00sec</span></div>
+                            <div class="fase-item"><span class="fase-icone">❄️</span> Resfriamento <span class="fase-tempo" id="tempo-resfriamento">0h 00min 00sec</span></div>
+                        </div>
+                        <div class="niveis-card">
+                            <div class="niveis-title">Níveis de água</div>
+                            <canvas id="grafico-niveis"></canvas>
+                        </div>
                     </div>
-                    
-                    <div class="pagination">
-                        <button class="pagination-btn" id="prev-page" disabled>Anterior</button>
-                        <span class="page-info">Página <span id="current-page">1</span> de <span id="total-pages">1</span></span>
-                        <button class="pagination-btn" id="next-page">Próxima</button>
-                    </div>
-                </section>
+                </div>
             </div>
         </main>
     </div>
     
-    <!-- Modal de Seleção de Plantas -->
-    <div class="modal" id="plantSelectionModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Selecione a Planta</h3>
-                <span class="close-modal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="plant-grid">
-                    <div class="plant-card" data-plant="lavanda" data-temp="60" data-pressure="25">
-                        <div class="plant-icon">🌿</div>
-                        <h4>Lavanda</h4>
-                        <p>Temperatura: 60°C</p>
-                        <p>Pressão: 25 Pa</p>
-                    </div>
-                    <div class="plant-card" data-plant="eucalipto" data-temp="70" data-pressure="30">
-                        <div class="plant-icon">🌱</div>
-                        <h4>Eucalipto</h4>
-                        <p>Temperatura: 70°C</p>
-                        <p>Pressão: 30 Pa</p>
-                    </div>
-                    <div class="plant-card" data-plant="alecrim" data-temp="65" data-pressure="28">
-                        <div class="plant-icon">🌿</div>
-                        <h4>Alecrim</h4>
-                        <p>Temperatura: 65°C</p>
-                        <p>Pressão: 28 Pa</p>
-                    </div>
-                    <div class="plant-card" data-plant="manjericao" data-temp="55" data-pressure="22">
-                        <div class="plant-icon">🌱</div>
-                        <h4>Manjericão</h4>
-                        <p>Temperatura: 55°C</p>
-                        <p>Pressão: 22 Pa</p>
-                    </div>
-                    <div class="plant-card" data-plant="hortela" data-temp="50" data-pressure="20">
-                        <div class="plant-icon">🌿</div>
-                        <h4>Hortelã</h4>
-                        <p>Temperatura: 50°C</p>
-                        <p>Pressão: 20 Pa</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <script src="historico.js"></script>
+    {% include 'components/novo_processo_modal.html' %}
+    <script src="{{ url_for('static', filename='js/novo_processo_modal.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/historico.js') }}"></script>
 </body>
 </html>
