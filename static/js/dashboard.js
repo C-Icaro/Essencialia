@@ -109,207 +109,6 @@ const utils = {
     }
 };
 
-// Gerenciamento de Alertas
-const alerts = {
-    localAlerts: new Map(), // Armazena alertas locais que não devem ser sobrescritos
-
-    async fetch() {
-        try {
-            const response = await utils.fetchWithTimeout('/alerts');
-            const data = await response.json();
-            this.render(data);
-        } catch (error) {
-            console.error('Erro ao buscar alertas:', error);
-            this.add('error', 'Erro ao carregar alertas');
-        }
-    },
-
-    render(alerts) {
-        const alertList = document.querySelector('.alert-list');
-        if (!alertList) return;
-
-        // Limpa apenas os alertas do servidor, mantendo os locais
-        const serverAlerts = Array.from(alertList.querySelectorAll('.alert:not([data-local="true"])'));
-        serverAlerts.forEach(alert => alert.remove());
-
-        // Adiciona os novos alertas do servidor
-        alerts.forEach(alert => {
-            // Não sobrescreve alertas locais
-            if (!this.localAlerts.has(alert.id)) {
-                this.createAlertElement(alert, alertList);
-            }
-        });
-
-        // Garante que os alertas locais permaneçam visíveis
-        this.localAlerts.forEach((alertData, alertId) => {
-            if (!alertList.querySelector(`[data-alert-id="${alertId}"]`)) {
-                this.createAlertElement(alertData, alertList, true);
-            }
-        });
-    },
-
-    createAlertElement(alert, container, isLocal = false) {
-        const alertElement = document.createElement('div');
-        alertElement.className = `alert ${alert.type}`;
-        if (isLocal) {
-            alertElement.dataset.local = 'true';
-        }
-        if (alert.id) {
-            alertElement.dataset.alertId = alert.id;
-        }
-        
-        const icon = this.getAlertIcon(alert.type);
-        alertElement.innerHTML = `
-            <div class="alert-header">
-                <span class="alert-icon">${icon}</span>
-                <span class="alert-text">${alert.message}</span>
-                <button class="close-alert">×</button>
-            </div>
-            ${alert.data ? `<div class="alert-details">${this.formatAlertDetails(alert.type, alert.data)}</div>` : ''}
-            <div class="alert-footer">
-                <span class="alert-time">${alert.timestamp || 'Agora mesmo'}</span>
-            </div>
-        `;
-
-        this.setupAlertInteractions(alertElement, alert, isLocal);
-        container.appendChild(alertElement);
-    },
-
-    getAlertIcon(type) {
-        const icons = {
-            success: '✅',
-            error: '⚠️',
-            info: 'ℹ️',
-            warning: '⚠️'
-        };
-        return icons[type] || 'ℹ️';
-    },
-
-    getAlertContent(alert) {
-        if (alert.type === 'falha' && alert.data) {
-            return this.formatFailureAlert(alert.data);
-        }
-        return `<div class='alert-details'>${alert.message}</div>`;
-    },
-
-    formatFailureAlert(data) {
-        const fields = ['tipo', 'horario', 'duracao_sec', 'solucao'];
-        return `
-            <div class='alert-details'>
-                ${fields.map(field => 
-                    data[field] ? `<div><b>${field}:</b> ${field === 'horario' ? 
-                        utils.formatAlertTime(data[field]) : data[field]}</div>` : ''
-                ).join('')}
-            </div>
-        `;
-    },
-
-    setupAlertInteractions(element, alert, isLocal = false) {
-        const closeBtn = element.querySelector('.close-alert');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', async () => {
-                if (isLocal) {
-                    // Remove apenas do DOM se for local
-                    element.remove();
-                    if (alert.id) {
-                        this.localAlerts.delete(alert.id);
-                    }
-                } else if (alert.id) {
-                    // Marca como resolvido no servidor se não for local
-                    try {
-                        const response = await fetch(`/alerts/resolve/${alert.id}`, {
-                            method: 'POST'
-                        });
-                        const data = await response.json();
-                        if (data.success) {
-                            element.remove();
-                        }
-                    } catch (error) {
-                        console.error('Erro ao resolver alerta:', error);
-                    }
-                }
-            });
-        }
-    },
-
-    add(type, message, data = null, isLocal = false) {
-        const alertList = document.querySelector('.alert-list');
-        if (!alertList) return;
-
-        const alertData = {
-            type,
-            message,
-            data,
-            timestamp: new Date().toISOString()
-        };
-
-        if (isLocal) {
-            // Gera um ID temporário para alertas locais
-            const tempId = 'local_' + Date.now();
-            alertData.id = tempId;
-            this.localAlerts.set(tempId, alertData);
-        }
-
-        this.createAlertElement(alertData, alertList, isLocal);
-    },
-
-    formatAlertDetails(type, data) {
-        if (!data) return '';
-        
-        const templates = {
-            temperature: `
-                <div class="alert-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Temperatura:</span>
-                        <span class="detail-value">${data.temperatura}°C</span>
-                    </div>
-                    ${data.limite ? `
-                    <div class="detail-item">
-                        <span class="detail-label">Limite:</span>
-                        <span class="detail-value">${data.limite}°C</span>
-                    </div>` : ''}
-                </div>`,
-            pressure: data.variacao ? `
-                <div class="alert-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Pressão Atual:</span>
-                        <span class="detail-value">${data.pressao_atual} kPa</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Pressão Anterior:</span>
-                        <span class="detail-value">${data.pressao_anterior} kPa</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Variação:</span>
-                        <span class="detail-value">${data.variacao.toFixed(1)} kPa</span>
-                    </div>
-                </div>` : `
-                <div class="alert-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Pressão:</span>
-                        <span class="detail-value">${data.pressao} kPa</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Limite:</span>
-                        <span class="detail-value">${data.limite} kPa</span>
-                    </div>
-                </div>`,
-            water_level: `
-                <div class="alert-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Nível:</span>
-                        <span class="detail-value">${data.nivel}</span>
-                    </div>
-                </div>`
-        };
-
-        return templates[type] || '';
-    }
-};
-
-// Expor alerts para o escopo global
-window.alerts = alerts;
-
 // Gerenciamento de Gráficos
 const charts = {
     commonOptions: {
@@ -611,10 +410,6 @@ const realtime = {
             
             state.simulation.useRealData = true;
 
-            if (!state.simulation.currentPlant) {
-                document.querySelector('.plant-name').innerText = 'Manjericão';
-            }
-
             const tempValue = parseFloat(data.temperatura) || 0;
             document.querySelector('.temp-value').innerText = `${tempValue.toFixed(1)} °C`;
             state.simulation.temperature = tempValue;
@@ -718,7 +513,58 @@ const simulation = {
 };
 
 // Inicialização da aplicação
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Atualiza informações do processo em andamento
+    async function atualizarProcessoEmAndamento() {
+        try {
+            const response = await fetch('/api/process');
+            const result = await response.json();
+            const plantNameEl = document.querySelector('.plant-name');
+            const materialInputEl = document.querySelector('.material-input');
+            const timeDisplayEl = document.querySelector('.time-display');
+            if (!plantNameEl || !materialInputEl || !timeDisplayEl) return;
+            if (result.success) {
+                const processoEmAndamento = result.processes.find(p => p.status === 'em andamento');
+                if (processoEmAndamento) {
+                    plantNameEl.textContent = processoEmAndamento.plant_name || 'Nome da planta';
+                    materialInputEl.value = processoEmAndamento.quantidade_materia_prima ? `${processoEmAndamento.quantidade_materia_prima} gramas` : '000 gramas';
+                    // Calcula tempo restante
+                    let tempoRestante = processoEmAndamento.tempo_estimado;
+                    if (processoEmAndamento.start_time) {
+                        // start_time está no formato dd/mm/yyyy HH:MM:SS
+                        const [data, hora] = processoEmAndamento.start_time.split(' ');
+                        const [dia, mes, ano] = data.split('/');
+                        const [h, m, s] = hora.split(':');
+                        const startDate = new Date(`${ano}-${mes}-${dia}T${h}:${m}:${s}`);
+                        const agora = new Date();
+                        const diffMin = Math.floor((agora - startDate) / 60000);
+                        tempoRestante = Math.max(0, processoEmAndamento.tempo_estimado - diffMin);
+                    }
+                    // Formata tempo restante para HH:MM:SS
+                    const h = Math.floor(tempoRestante / 60);
+                    const m = tempoRestante % 60;
+                    timeDisplayEl.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:00`;
+                } else {
+                    plantNameEl.textContent = 'Aguardando início de processo';
+                    materialInputEl.value = '000 gramas';
+                    timeDisplayEl.textContent = '00:00:00';
+                }
+            } else {
+                plantNameEl.textContent = 'Aguardando início de processo';
+                materialInputEl.value = '000 gramas';
+                timeDisplayEl.textContent = '00:00:00';
+            }
+        } catch (error) {
+            const plantNameEl = document.querySelector('.plant-name');
+            const materialInputEl = document.querySelector('.material-input');
+            const timeDisplayEl = document.querySelector('.time-display');
+            if (plantNameEl) plantNameEl.textContent = 'Aguardando início de processo';
+            if (materialInputEl) materialInputEl.value = '000 gramas';
+            if (timeDisplayEl) timeDisplayEl.textContent = '00:00:00';
+        }
+    }
+    await atualizarProcessoEmAndamento();
+
     // Inicializar componentes
     charts.init();
     controls.init();
@@ -834,14 +680,6 @@ window.updateWaterLevel = function(waterLevel) {
     const percent = Math.max(0, Math.min(100, waterLevel));
     waterFill.style.height = `${percent}%`;
     levelStatus.textContent = percent < 50 ? 'Baixo' : 'Alto';
-};
-
-// Corrige duplicidade de alertas: limpa a lista antes de renderizar
-alerts.render = function(alertsArr) {
-    const alertList = document.querySelector('.alert-list');
-    if (!alertList) return;
-    alertList.innerHTML = '';
-    alertsArr.forEach(alert => this.createAlertElement(alert, alertList));
 };
 
 // Função para desenhar o contador circular de tempo restante
