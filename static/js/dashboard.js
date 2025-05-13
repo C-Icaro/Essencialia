@@ -431,7 +431,6 @@ document.addEventListener("DOMContentLoaded", () => {
         .then(alerts => {
             const alertList = document.querySelector(".alert-list");
             alertList.innerHTML = "";
-            
             if (alerts.length === 0) {
                 const noAlerts = document.createElement("div");
                 noAlerts.className = "alert info";
@@ -442,100 +441,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 alertList.appendChild(noAlerts);
                 return;
             }
-
             alerts.forEach(alert => {
                 const alertElement = document.createElement("div");
                 alertElement.className = `alert ${getAlertClass(alert.type)}`;
                 alertElement.dataset.alertId = alert.id;
-
                 let icon = "⚠️";
                 if (alert.type === "success") icon = "✅";
                 else if (alert.type === "info") icon = "ℹ️";
-
-                let alertDetails = "";
-                if (alert.data) {
-                    switch (alert.type) {
-                        case "temperature":
-                            alertDetails = `
-                                <div class="alert-details">
-                                    <div class="detail-item">
-                                        <span class="detail-label">Temperatura:</span>
-                                        <span class="detail-value">${alert.data.temperatura}°C</span>
-                                    </div>
-                                    ${alert.data.limite ? `
-                                    <div class="detail-item">
-                                        <span class="detail-label">Limite:</span>
-                                        <span class="detail-value">${alert.data.limite}°C</span>
-                                    </div>` : ''}
-                                </div>`;
-                            break;
-                        case "pressure":
-                            if (alert.data.variacao) {
-                                alertDetails = `
-                                    <div class="alert-details">
-                                        <div class="detail-item">
-                                            <span class="detail-label">Pressão Atual:</span>
-                                            <span class="detail-value">${alert.data.pressao_atual} kPa</span>
-                                        </div>
-                                        <div class="detail-item">
-                                            <span class="detail-label">Pressão Anterior:</span>
-                                            <span class="detail-value">${alert.data.pressao_anterior} kPa</span>
-                                        </div>
-                                        <div class="detail-item">
-                                            <span class="detail-label">Variação:</span>
-                                            <span class="detail-value">${alert.data.variacao.toFixed(1)} kPa</span>
-                                        </div>
-                                    </div>`;
-                            } else {
-                                alertDetails = `
-                                    <div class="alert-details">
-                                        <div class="detail-item">
-                                            <span class="detail-label">Pressão:</span>
-                                            <span class="detail-value">${alert.data.pressao} kPa</span>
-                                        </div>
-                                        <div class="detail-item">
-                                            <span class="detail-label">Limite:</span>
-                                            <span class="detail-value">${alert.data.limite} kPa</span>
-                                        </div>
-                                    </div>`;
-                            }
-                            break;
-                        case "water_level":
-                            alertDetails = `
-                                <div class="alert-details">
-                                    <div class="detail-item">
-                                        <span class="detail-label">Nível:</span>
-                                        <span class="detail-value">${alert.data.nivel}</span>
-                                    </div>
-                                </div>`;
-                            break;
-                    }
+                // Exibição simplificada
+                let alertContent = "";
+                if (alert.type === "falha" && alert.data) {
+                    // Exibir apenas os campos enviados pelo broker
+                    alertContent = `<div class='alert-details'>`;
+                    if (alert.data.tipo) alertContent += `<div><b>Tipo:</b> ${alert.data.tipo}</div>`;
+                    if (alert.data.horario) alertContent += `<div><b>Horário:</b> ${formatAlertTime(alert.data.horario)}</div>`;
+                    if (alert.data.duracao_sec) alertContent += `<div><b>Duração:</b> ${alert.data.duracao_sec} s</div>`;
+                    if (alert.data.solucao) alertContent += `<div><b>Solução:</b> ${alert.data.solucao}</div>`;
+                    alertContent += `</div>`;
+                } else {
+                    // Para alertas: mostrar só o texto puro
+                    alertContent = `<div class='alert-details'>${alert.message}</div>`;
                 }
-
                 alertElement.innerHTML = `
                     <div class="alert-header">
                         <span class="alert-icon">${icon}</span>
-                        <span class="alert-text">${alert.message}</span>
+                        <span class="alert-text"></span>
                         <button class="close-alert">×</button>
                     </div>
-                    ${alertDetails}
-                    <div class="alert-footer">
-                        <span class="alert-time">${formatAlertTime(alert.timestamp)}</span>
-                    </div>
+                    ${alertContent}
                 `;
-
                 alertElement.querySelector(".close-alert").addEventListener("click", () => {
-                    fetch(`/alerts/resolve/${alert.id}`, {
-                        method: 'POST'
-                    }).then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            alertElement.style.display = "none";
-                        }
-                    })
-                    .catch(error => console.error('Erro ao resolver alerta:', error));
+                    fetch(`/alerts/resolve/${alert.id}`, { method: 'POST' })
+                        .then(response => response.json())
+                        .then(data => { if (data.success) alertElement.style.display = "none"; });
                 });
-
                 alertList.appendChild(alertElement);
             });
         })

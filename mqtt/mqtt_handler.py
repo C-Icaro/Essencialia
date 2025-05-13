@@ -124,36 +124,43 @@ def save_pressure_to_db(pressure):
 def on_connect(client, userdata, flags, rc):
     print("Conectado ao broker MQTT")
     client.subscribe("essencialia/dados")
+    client.subscribe("essencialia/alertas")
+    client.subscribe("essencialia/falhas")
 
 def on_message(client, userdata, msg):
     global mqtt_data
     try:
-        # Verificar se é um tópico de alerta
-        if msg.topic == "essencialia/alertas":
-            # Processar e salvar alerta no banco de dados
+        # Processar alertas e falhas
+        if msg.topic in ["essencialia/alertas", "essencialia/falhas"]:
             conn = sqlite3.connect(DB_FILE)
             cursor = conn.cursor()
-            
             try:
-                # Decodificar e parsear o JSON do alerta
-                alerta = json.loads(msg.payload.decode())
-                
-                # Inserir alerta com todos os dados
+                payload_str = msg.payload.decode()
+                try:
+                    alerta = json.loads(payload_str)
+                    # Mensagem JSON estruturada
+                    alert_type = alerta.get('type') or alerta.get('tipo') or ('falha' if msg.topic.endswith('falhas') else 'alerta')
+                    message = alerta.get('message') or alerta.get('mensagem') or alerta.get('solucao') or payload_str
+                    data = alerta.get('data') or alerta
+                except json.JSONDecodeError:
+                    # Mensagem em texto puro
+                    alert_type = 'alerta' if msg.topic.endswith('alertas') else 'falha'
+                    message = payload_str
+                    data = None
                 cursor.execute("""
                     INSERT INTO alerts (process_id, alert_type, message, data, timestamp)
                     VALUES (?, ?, ?, ?, ?)
                 """, (
                     None,
-                    alerta.get('type', 'info'),
-                    alerta.get('message', ''),
-                    json.dumps(alerta.get('data', {})),
-                    alerta.get('data', {}).get('timestamp', datetime.now().isoformat())
+                    alert_type,
+                    message,
+                    json.dumps(data) if data else None,
+                    datetime.now().isoformat()
                 ))
-                
                 conn.commit()
-                print(f"Alerta salvo: {alerta['message']}")
-            except json.JSONDecodeError as e:
-                print(f"Erro ao decodificar alerta: {e}")
+                print(f"Alerta/Falha salva: {message}")
+            except Exception as e:
+                print(f"Erro ao processar alerta/falha: {e}")
             finally:
                 conn.close()
             return
