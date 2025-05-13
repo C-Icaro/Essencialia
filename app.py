@@ -90,7 +90,7 @@ def create_process():
         }), 400
 
 @app.route('/api/process/<int:process_id>/finish', methods=['POST'])
-def finish_process():
+def finish_process(process_id):
     try:
         data = request.json
         conn = get_db_connection()

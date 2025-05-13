@@ -727,7 +727,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(() => {
         realtime.update();
         charts.update();
-        alerts.fetch();
     }, CONFIG.UPDATE_INTERVAL);
     
     // Iniciar simulação
@@ -736,7 +735,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Primeira atualização
     realtime.update();
     charts.update();
-    alerts.fetch();
 
     // Adiciona funcionalidade ao botão de abrir modal de produção
     const btnProducao = document.getElementById('abrir-producao-modal-btn');
