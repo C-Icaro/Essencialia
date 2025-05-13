@@ -133,19 +133,14 @@ const alerts = {
     createAlertElement(alert, container) {
         const alertElement = document.createElement('div');
         alertElement.className = `alert ${alert.type}`;
-        
         const icon = this.getAlertIcon(alert.type);
-        const content = this.getAlertContent(alert);
-        
         alertElement.innerHTML = `
             <div class="alert-header">
                 <span class="alert-icon">${icon}</span>
-                <span class="alert-text">${alert.message}</span>
-                <button class="close-alert">×</button>
             </div>
-            ${content}
+            <div class='alert-details'>${alert.message}</div>
+            <button class="close-alert">×</button>
         `;
-
         this.setupAlertInteractions(alertElement, alert);
         container.appendChild(alertElement);
     },
@@ -713,4 +708,71 @@ document.addEventListener('DOMContentLoaded', () => {
     realtime.update();
     charts.update();
     alerts.fetch();
-}); 
+});
+
+// Atualiza o gauge de pressão desenhando o arco no canvas
+window.updatePressureGauge = function(pressure) {
+    const gaugeValue = document.querySelector('.gauge-value');
+    const gaugeLabel = document.querySelector('.gauge-label');
+    const canvas = document.getElementById('pressureGauge');
+    if (!gaugeValue || !gaugeLabel || !canvas) return;
+    let estado = 'Normal';
+    let cor = '#8BC34A';
+    if (pressure < 20) {
+        estado = 'Baixa';
+        cor = '#4CAF50';
+    } else if (pressure < 40) {
+        estado = 'Normal';
+        cor = '#8BC34A';
+    } else if (pressure < 70) {
+        estado = 'Atenção';
+        cor = '#FFC107';
+    } else {
+        estado = 'Risco';
+        cor = '#F44336';
+    }
+    gaugeValue.textContent = `${pressure.toFixed(0).padStart(2, '0')} kPa`;
+    gaugeLabel.textContent = `Estado: ${estado}`;
+    gaugeValue.style.color = cor;
+
+    // Desenhar arco do gauge
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height - 10;
+    const radius = Math.min(canvas.width, canvas.height * 2) / 2 - 20;
+    const startAngle = Math.PI;
+    const endAngle = 0;
+    // Fundo do arco
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, startAngle, endAngle, false);
+    ctx.lineWidth = 18;
+    ctx.strokeStyle = '#eee';
+    ctx.stroke();
+    // Arco colorido proporcional à pressão
+    const percent = Math.max(0, Math.min(1, pressure / 100));
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, startAngle, startAngle + Math.PI * percent, false);
+    ctx.lineWidth = 18;
+    ctx.strokeStyle = cor;
+    ctx.stroke();
+};
+
+// Adiciona função para atualizar o nível de água
+window.updateWaterLevel = function(waterLevel) {
+    const waterFill = document.getElementById('waterFill');
+    const levelStatus = document.querySelector('.level-status');
+    if (!waterFill || !levelStatus) return;
+    // Nível de 0 a 100
+    const percent = Math.max(0, Math.min(100, waterLevel));
+    waterFill.style.height = `${percent}%`;
+    levelStatus.textContent = percent < 50 ? 'Baixo' : 'Alto';
+};
+
+// Corrige duplicidade de alertas: limpa a lista antes de renderizar
+alerts.render = function(alertsArr) {
+    const alertList = document.querySelector('.alert-list');
+    if (!alertList) return;
+    alertList.innerHTML = '';
+    alertsArr.forEach(alert => this.createAlertElement(alert, alertList));
+}; 
