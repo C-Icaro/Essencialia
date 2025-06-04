@@ -513,88 +513,78 @@ const simulation = {
 };
 
 // Inicialização da aplicação
-document.addEventListener('DOMContentLoaded', async function() {
-    // Inicializa o UIUpdater
+document.addEventListener('DOMContentLoaded', async () => {
+    // Inicializa os componentes
+    const processChecker = window.ProcessChecker.init();
     const uiUpdater = window.UIUpdater.init();
+    const remainingTime = await window.RemainingTime.init('.time-display');
 
-    // Inicia atualizações periódicas do processo
-    uiUpdater.startPeriodicUpdates();
-
-    // Inicializar componentes
+    // Inicializa os gráficos
     charts.init();
     controls.init();
-    
-    // Iniciar atualizações periódicas
-    setInterval(() => {
-        realtime.update();
-        charts.update();
+
+    // Inicia atualizações periódicas dos gráficos
+    setInterval(async () => {
+        try {
+            await charts.update();
+            await realtime.update();
+        } catch (error) {
+            console.error('Erro nas atualizações periódicas:', error);
+        }
     }, CONFIG.UPDATE_INTERVAL);
-    
-    // Iniciar simulação
+
+    // Inicia a simulação
     simulation.start();
-    
+
     // Primeira atualização
-    realtime.update();
     charts.update();
+    realtime.update();
 
-    // Adiciona funcionalidade ao botão de abrir modal de produção
-    const btnProducao = document.getElementById('abrir-producao-modal-btn');
-    if (btnProducao) {
-        btnProducao.addEventListener('click', function() {
-            const modal = document.getElementById('producao-modal');
-            if (modal) modal.style.display = 'block';
-        });
-    }
+    // Evento de novo processo iniciado
+    window.addEventListener('novoProcessoIniciado', async (event) => {
+        const { process_id, plant_name, material_input, part_used, tempo_estimado } = event.detail;
+        
+        // Atualiza informações do processo
+        document.querySelector('.plant-name').textContent = plant_name;
+        document.querySelector('.material-input').textContent = material_input;
+        document.querySelector('.part-used').textContent = part_used;
+        document.querySelector('.estimated-duration').textContent = `${tempo_estimado} minutos`;
 
-    // Escuta evento customizado do novo processo
-    window.addEventListener('novoProcessoIniciado', function(e) {
-        const { planta, quantidade, parte, duracao } = e.detail;
-        // Atualiza nome da planta
-        const plantName = document.querySelector('.plant-name');
-        if (plantName) plantName.textContent = planta.charAt(0).toUpperCase() + planta.slice(1);
-        // Atualiza quantidade de matéria-prima
-        const materialInput = document.querySelector('.material-input');
-        if (materialInput) materialInput.value = `${quantidade} gramas`;
-        // Atualiza parte utilizada (adiciona se não existir)
-        let parteEl = document.querySelector('.parte-utilizada');
-        if (!parteEl) {
-            parteEl = document.createElement('div');
-            parteEl.className = 'parte-utilizada';
-            parteEl.style.marginTop = '8px';
-            parteEl.style.fontSize = '15px';
-            document.querySelector('.plant-info').appendChild(parteEl);
+        // Reinicia o contador com o tempo estimado
+        if (remainingTime) {
+            await remainingTime.start();
         }
-        parteEl.textContent = `Parte utilizada: ${parte.charAt(0).toUpperCase() + parte.slice(1)}`;
-        // Atualiza duração estimada (adiciona se não existir)
-        let duracaoEl = document.querySelector('.duracao-estimada');
-        if (!duracaoEl) {
-            duracaoEl = document.createElement('div');
-            duracaoEl.className = 'duracao-estimada';
-            duracaoEl.style.marginTop = '4px';
-            duracaoEl.style.fontSize = '15px';
-            document.querySelector('.plant-info').appendChild(duracaoEl);
-        }
-        duracaoEl.textContent = `Duração estimada: ${duracao}`;
 
-        // Inicia o contador circular se houver duração
-        if (duracao) {
-            const match = duracao.match(/(\d+)/);
-            if (match) {
-                const minutos = parseInt(match[1], 10);
-                if (minutos > 0) {
-                    uiUpdater.startCircularCountdown(minutos * 60);
-                }
+        // Atualiza a UI
+        uiUpdater.updateCurrentProcess();
+    });
+
+    // Evento de conclusão do processo
+    window.addEventListener('countdownComplete', () => {
+        // Mostra alerta de sucesso
+        window.alerts.add('Processo concluído com sucesso!', 'success');
+        
+        // Abre o modal de produção
+        const producaoModal = document.getElementById('producao-modal');
+        if (producaoModal) producaoModal.style.display = 'block';
+    });
+
+    // Evento de visibilidade da página
+    document.addEventListener('visibilitychange', async () => {
+        if (document.visibilityState === 'visible') {
+            // Atualiza os gráficos
+            await charts.update();
+            await realtime.update();
+            
+            // Reinicia o contador quando a página volta a ficar visível
+            if (remainingTime) {
+                await remainingTime.start();
             }
         }
     });
 
-    // Escuta evento de conclusão do contador
-    window.addEventListener('countdownComplete', function() {
-        alerts.add('success', 'Processo concluído com sucesso!');
-        // Abre o modal de produção automaticamente
-        const producaoModal = document.getElementById('producao-modal');
-        if (producaoModal) producaoModal.style.display = 'block';
-    });
+    // Inicia atualizações periódicas do UI
+    uiUpdater.startPeriodicUpdates();
 });
 
 // Atualiza o gauge de pressão usando o UIUpdater

@@ -1,0 +1,54 @@
+BEGIN TRANSACTION;
+CREATE TABLE alerts (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    process_id INTEGER,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    alert_type TEXT NOT NULL,
+                    message TEXT NOT NULL,
+                    data TEXT,
+                    is_resolved BOOLEAN DEFAULT 0,
+                    resolved_at DATETIME,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (process_id) REFERENCES process(id)
+                );
+CREATE TABLE plant (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL UNIQUE,
+                    description TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
+CREATE TABLE process (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    plant_id INTEGER,
+                    start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    end_time DATETIME,
+                    operator TEXT,
+                    quantidade_materia_prima REAL,
+                    parte_utilizada TEXT,
+                    temp_min REAL,
+                    temp_max REAL,
+                    volume_extraido REAL,
+                    rendimento REAL,
+                    notas_operador TEXT,
+                    tempo_estimado INTEGER,
+                    status TEXT DEFAULT 'em andamento',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (plant_id) REFERENCES plant(id)
+                );
+CREATE TABLE sensor_data (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    process_id INTEGER,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    sensor_type TEXT NOT NULL,
+                    value REAL NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (process_id) REFERENCES process(id)
+                );
+CREATE INDEX idx_process_status ON process(status);
+CREATE INDEX idx_sensor_data_type ON sensor_data(sensor_type);
+CREATE INDEX idx_alerts_resolved ON alerts(is_resolved);
+CREATE INDEX idx_process_plant ON process(plant_id);
+DELETE FROM "sqlite_sequence";
+COMMIT;

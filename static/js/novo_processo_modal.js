@@ -124,16 +124,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputGrama = document.querySelector('input[name="quantidade"]');
     const duracaoEstimada = document.getElementById('duracao-estimada');
     if (inputGrama && duracaoEstimada) {
-      inputGrama.addEventListener('input', function() {
-        const massa = parseFloat(inputGrama.value.replace(',', '.'));
-        if (!massa || massa <= 0) {
-          duracaoEstimada.value = '';
-        } else {
-          const tempo = Math.round(0.12 * massa + 20);
-          duracaoEstimada.value = `${tempo} minutos`;
-        }
-      });
-      inputGrama.dispatchEvent(new Event('input'));
+        inputGrama.addEventListener('input', function() {
+            const massa = parseFloat(inputGrama.value.replace(',', '.'));
+            if (!massa || massa <= 0) {
+                duracaoEstimada.value = '';
+                duracaoEstimada.dataset.minutes = '0';
+            } else {
+                const tempo = Math.round(0.12 * massa + 20);
+                duracaoEstimada.value = `${tempo} minutos`;
+                duracaoEstimada.dataset.minutes = tempo.toString();
+            }
+        });
+        inputGrama.dispatchEvent(new Event('input'));
     }
   
     const tempPorPlanta = {
@@ -156,3 +158,63 @@ document.addEventListener('DOMContentLoaded', function() {
       selectPlanta.dispatchEvent(new Event('change'));
     }
   });
+
+async function iniciarProcesso(event) {
+    event.preventDefault();
+
+    const form = event.target;
+    const formData = new FormData(form);
+    const duracaoEstimada = document.getElementById('duracao-estimada');
+    const tempoEstimado = parseInt(duracaoEstimada.dataset.minutes || '0');
+
+    if (!tempoEstimado || tempoEstimado <= 0) {
+        window.alerts.add('Por favor, insira uma quantidade válida para calcular o tempo estimado', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/process', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                plant_id: formData.get('plant_id'),
+                material_input: formData.get('material_input'),
+                part_used: formData.get('part_used'),
+                tempo_estimado: tempoEstimado,
+                operator: formData.get('operator')
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            // Dispara evento com os dados do novo processo
+            window.dispatchEvent(new CustomEvent('novoProcessoIniciado', {
+                detail: {
+                    process_id: result.process_id,
+                    plant_name: formData.get('plant_name'),
+                    material_input: `${formData.get('material_input')} gramas`,
+                    part_used: formData.get('part_used'),
+                    tempo_estimado: tempoEstimado
+                }
+            }));
+
+            // Fecha o modal
+            const modal = document.getElementById('novo-processo-modal');
+            if (modal) modal.style.display = 'none';
+
+            // Limpa o formulário
+            form.reset();
+
+            // Mostra mensagem de sucesso
+            window.alerts.add('Processo iniciado com sucesso!', 'success');
+        } else {
+            throw new Error(result.message || 'Erro ao iniciar processo');
+        }
+    } catch (error) {
+        console.error('Erro ao iniciar processo:', error);
+        window.alerts.add(error.message || 'Erro ao iniciar processo', 'error');
+    }
+}
