@@ -1,5 +1,8 @@
 // static/js/novo_processo_modal.js
 document.addEventListener('DOMContentLoaded', function() {
+    // Inicializa o ProcessChecker
+    const processChecker = window.ProcessChecker.init();
+
     // Função para adicionar alerta no quadro de avisos
     async function adicionarAlerta(mensagem, tipo = 'error') {
         // Usa o sistema de alertas do dashboard
@@ -10,50 +13,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Função para verificar se existe processo em andamento
-    async function verificarProcessoEmAndamento() {
-        try {
-            console.log('Verificando processo em andamento...');
-            const response = await fetch('/api/process');
-            const result = await response.json();
-            
-            if (result.success) {
-                const processoEmAndamento = result.processes.find(p => p.status === 'em andamento');
-                if (processoEmAndamento) {
-                    console.log('Processo em andamento encontrado, mostrando alerta...');
-                    // Usa o sistema de alertas persistente
-                    await adicionarAlerta(
-                        'Já existe um processo em andamento. Finalize o processo atual antes de iniciar um novo.',
-                        'error'
-                    );
-                    return true;
-                }
-            }
-            return false;
-        } catch (error) {
-            console.error('Erro ao verificar processo em andamento:', error);
-            // Em caso de erro, também cria um alerta persistente
-            await adicionarAlerta(
-                'Erro ao verificar processo em andamento. Por favor, tente novamente.',
-                'error'
-            );
-            return false;
-        }
-    }
-
     // Abrir modal ao clicar em qualquer botão de novo processo
     async function abrirModalNovoProcesso(e) {
         if (e) e.preventDefault();
         
-        // Verifica se existe processo em andamento usando a função global
-        if (typeof window.verificarProcessoEmAndamento === 'function') {
-            const temProcessoEmAndamento = await window.verificarProcessoEmAndamento();
-            if (temProcessoEmAndamento) {
-                return; // Não abre o modal se houver processo em andamento
-            }
-        } else {
-            console.error('Função verificarProcessoEmAndamento não disponível');
-            return;
+        // Verifica se existe processo em andamento usando o ProcessChecker
+        const temProcessoEmAndamento = await processChecker.hasActiveProcess();
+        if (temProcessoEmAndamento) {
+            return; // Não abre o modal se houver processo em andamento
         }
         
         document.getElementById('novo-processo-modal').style.display = 'block';

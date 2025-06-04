@@ -497,7 +497,7 @@ const simulation = {
 
             const type = types[Math.floor(Math.random() * types.length)];
             const message = messages[Math.floor(Math.random() * messages.length)];
-P
+
             alerts.add(type, message);
         }
     },
@@ -514,94 +514,11 @@ P
 
 // Inicialização da aplicação
 document.addEventListener('DOMContentLoaded', async function() {
-    // Atualiza informações do processo em andamento
-    async function atualizarProcessoEmAndamento() {
-        try {
-            const response = await fetch('/api/process');
-            const result = await response.json();
-            const plantNameEl = document.querySelector('.plant-name');
-            const materialInputEl = document.querySelector('.material-input');
-            const timeDisplayEl = document.querySelector('.time-display');
-            if (!plantNameEl || !materialInputEl || !timeDisplayEl) return;
-            if (result.success) {
-                const processoEmAndamento = result.processes.find(p => p.status === 'em andamento');
-                if (processoEmAndamento) {
-                    plantNameEl.textContent = processoEmAndamento.plant_name || 'Nome da planta';
-                    materialInputEl.value = processoEmAndamento.quantidade_materia_prima ? `${processoEmAndamento.quantidade_materia_prima} gramas` : '000 gramas';
-                    // Calcula tempo restante
-                    let tempoRestante = processoEmAndamento.tempo_estimado;
-                    if (processoEmAndamento.start_time) {
-                        // start_time está no formato dd/mm/yyyy HH:MM:SS
-                        const [data, hora] = processoEmAndamento.start_time.split(' ');
-                        const [dia, mes, ano] = data.split('/');
-                        const [h, m, s] = hora.split(':');
-                        const startDate = new Date(`${ano}-${mes}-${dia}T${h}:${m}:${s}`);
-                        const agora = new Date();
-                        const diffMin = Math.floor((agora - startDate) / 60000);
-                        tempoRestante = Math.max(0, processoEmAndamento.tempo_estimado - diffMin);
-                    }
-                    // Formata tempo restante para HH:MM:SS
-                    const h = Math.floor(tempoRestante / 60);
-                    const m = tempoRestante % 60;
-                    timeDisplayEl.textContent = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:00`;
-                } else {
-                    plantNameEl.textContent = 'Aguardando início de processo';
-                    materialInputEl.value = '000 gramas';
-                    timeDisplayEl.textContent = '00:00:00';
-                }
-            } else {
-                plantNameEl.textContent = 'Aguardando início de processo';
-                materialInputEl.value = '000 gramas';
-                timeDisplayEl.textContent = '00:00:00';
-            }
-        } catch (error) {
-            const plantNameEl = document.querySelector('.plant-name');
-            const materialInputEl = document.querySelector('.material-input');
-            const timeDisplayEl = document.querySelector('.time-display');
-            if (plantNameEl) plantNameEl.textContent = 'Aguardando início de processo';
-            if (materialInputEl) materialInputEl.value = '000 gramas';
-            if (timeDisplayEl) timeDisplayEl.textContent = '00:00:00';
-        }
-    }
+    // Inicializa o UIUpdater
+    const uiUpdater = window.UIUpdater.init();
 
-    async function atualizarTempoRestanteProcesso() {
-        try {
-            const response = await fetch('/api/process');
-            const result = await response.json();
-            const timeDisplayEl = document.querySelector('.time-display');
-            if (!timeDisplayEl) return;
-
-            if (result.success) {
-                const processoEmAndamento = result.processes.find(p => p.status === 'em andamento');
-                if (processoEmAndamento && processoEmAndamento.start_time && processoEmAndamento.tempo_estimado) {
-                    // start_time no formato dd/mm/yyyy HH:MM:SS
-                    const [data, hora] = processoEmAndamento.start_time.split(' ');
-                    const [dia, mes, ano] = data.split('/');
-                    const [h, m, s] = hora.split(':');
-                    const startDate = new Date(`${ano}-${mes}-${dia}T${h}:${m}:${s}`);
-                    const agora = new Date();
-                    const diffMin = Math.floor((agora - startDate) / 60000);
-                    let tempoRestante = Math.max(0, processoEmAndamento.tempo_estimado - diffMin);
-
-                    // Formatar para HH:MM:SS
-                    const horas = Math.floor(tempoRestante / 60);
-                    const minutos = tempoRestante % 60;
-                    timeDisplayEl.textContent = `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}:00`;
-                } else {
-                    timeDisplayEl.textContent = '00:00:00';
-                }
-            } else {
-                timeDisplayEl.textContent = '00:00:00';
-            }
-        } catch (error) {
-            const timeDisplayEl = document.querySelector('.time-display');
-            if (timeDisplayEl) timeDisplayEl.textContent = '00:00:00';
-        }
-    }
-
-    await atualizarProcessoEmAndamento();
-    await atualizarTempoRestanteProcesso();
-    setInterval(atualizarTempoRestanteProcesso, 60000); // Atualiza a cada minuto
+    // Inicia atualizações periódicas do processo
+    uiUpdater.startPeriodicUpdates();
 
     // Inicializar componentes
     charts.init();
@@ -658,58 +575,35 @@ document.addEventListener('DOMContentLoaded', async function() {
             document.querySelector('.plant-info').appendChild(duracaoEl);
         }
         duracaoEl.textContent = `Duração estimada: ${duracao}`;
+
+        // Inicia o contador circular se houver duração
+        if (duracao) {
+            const match = duracao.match(/(\d+)/);
+            if (match) {
+                const minutos = parseInt(match[1], 10);
+                if (minutos > 0) {
+                    uiUpdater.startCircularCountdown(minutos * 60);
+                }
+            }
+        }
+    });
+
+    // Escuta evento de conclusão do contador
+    window.addEventListener('countdownComplete', function() {
+        alerts.add('success', 'Processo concluído com sucesso!');
+        // Abre o modal de produção automaticamente
+        const producaoModal = document.getElementById('producao-modal');
+        if (producaoModal) producaoModal.style.display = 'block';
     });
 });
 
-// Atualiza o gauge de pressão desenhando o arco no canvas
+// Atualiza o gauge de pressão usando o UIUpdater
 window.updatePressureGauge = function(pressure) {
-    const gaugeValue = document.querySelector('.gauge-value');
-    const gaugeLabel = document.querySelector('.gauge-label');
-    const canvas = document.getElementById('pressureGauge');
-    if (!gaugeValue || !gaugeLabel || !canvas) return;
-    let estado = 'Normal';
-    let cor = '#8BC34A';
-    if (pressure < 20) {
-        estado = 'Baixa';
-        cor = '#4CAF50';
-    } else if (pressure < 40) {
-        estado = 'Normal';
-        cor = '#8BC34A';
-    } else if (pressure < 70) {
-        estado = 'Atenção';
-        cor = '#FFC107';
-    } else {
-        estado = 'Risco';
-        cor = '#F44336';
-    }
-    gaugeValue.textContent = `${pressure.toFixed(0).padStart(2, '0')} kPa`;
-    gaugeLabel.textContent = `Estado: ${estado}`;
-    gaugeValue.style.color = cor;
-
-    // Desenhar arco do gauge
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height - 10;
-    const radius = Math.min(canvas.width, canvas.height * 2) / 2 - 20;
-    const startAngle = Math.PI;
-    const endAngle = 0;
-    // Fundo do arco
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, startAngle, endAngle, false);
-    ctx.lineWidth = 18;
-    ctx.strokeStyle = '#eee';
-    ctx.stroke();
-    // Arco colorido proporcional à pressão
-    const percent = Math.max(0, Math.min(1, pressure / 100));
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, startAngle, startAngle + Math.PI * percent, false);
-    ctx.lineWidth = 18;
-    ctx.strokeStyle = cor;
-    ctx.stroke();
+    const uiUpdater = window.UIUpdater;
+    if (uiUpdater) uiUpdater.updatePressureGauge(pressure);
 };
 
-// Adiciona função para atualizar o nível de água
+// Atualiza o nível de água
 window.updateWaterLevel = function(waterLevel) {
     const waterFill = document.getElementById('waterFill');
     const levelStatus = document.querySelector('.level-status');
@@ -720,68 +614,11 @@ window.updateWaterLevel = function(waterLevel) {
     levelStatus.textContent = percent < 50 ? 'Baixo' : 'Alto';
 };
 
-// Função para desenhar o contador circular de tempo restante
+// Atualiza o círculo de progresso usando o UIUpdater
 window.updateProgressCircle = function(percent) {
-    const canvas = document.getElementById('progressCircle');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = 65;
-    // Fundo
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#eee';
-    ctx.lineWidth = 14;
-    ctx.stroke();
-    // Arco de progresso
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, -Math.PI/2, -Math.PI/2 + 2 * Math.PI * percent / 100, false);
-    ctx.strokeStyle = '#4FCB98';
-    ctx.lineWidth = 14;
-    ctx.stroke();
+    const uiUpdater = window.UIUpdater;
+    if (uiUpdater) uiUpdater.updateProgressCircle(percent);
 };
-
-// Atualiza o contador circular e o tempo restante
-function startCircularCountdown(durationSec) {
-    let remaining = durationSec;
-    const timeDisplay = document.querySelector('.time-display');
-    const progressText = document.querySelector('.progress-text');
-    if (!timeDisplay) return;
-    if (window._countdownInterval) clearInterval(window._countdownInterval);
-    function update() {
-        const percent = 100 * (remaining / durationSec);
-        const h = Math.floor(remaining / 3600);
-        const m = Math.floor((remaining % 3600) / 60);
-        const s = remaining % 60;
-        const timeStr = [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
-        timeDisplay.textContent = timeStr;
-        progressText.textContent = `${Math.round(percent)}%`;
-        window.updateProgressCircle(percent);
-        if (remaining <= 0) {
-            clearInterval(window._countdownInterval);
-        } else {
-            remaining--;
-        }
-    }
-    update();
-    window._countdownInterval = setInterval(update, 1000);
-}
-
-// Escuta evento customizado do novo processo para iniciar o contador
-window.addEventListener('novoProcessoIniciado', function(e) {
-    let duracao = e.detail.duracao;
-    // Extrai número de minutos do texto (ex: '44 minutos')
-    let minutos = 0;
-    if (duracao) {
-        const match = duracao.match(/(\d+)/);
-        if (match) minutos = parseInt(match[1], 10);
-    }
-    if (minutos > 0) {
-        startCircularCountdown(minutos * 60);
-    }
-});
 
 // Adicionar handler para o modal de produção
 document.addEventListener('DOMContentLoaded', function() {
@@ -846,51 +683,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-});
-
-// Função global para verificar processo em andamento
-window.verificarProcessoEmAndamento = async function() {
-    console.log('Verificando processo em andamento...');
-    try {
-        const response = await fetch('/api/process');
-        const result = await response.json();
-        
-        if (result.success) {
-            const processoEmAndamento = result.processes.find(p => p.status === 'em andamento');
-            if (processoEmAndamento) {
-                console.log('Processo em andamento encontrado:', processoEmAndamento);
-                // Aguarda um pequeno delay para garantir que o sistema de alertas esteja disponível
-                await new Promise(resolve => setTimeout(resolve, 100));
-                
-                if (window.alerts) {
-                    await window.alerts.add(
-                        `Já existe um processo em andamento: ${processoEmAndamento.planta} (${processoEmAndamento.quantidade_materia_prima}g)`,
-                        'error',
-                        null,
-                        true
-                    );
-                } else {
-                    console.error('Sistema de alertas não disponível');
-                }
-                return true;
-            }
-        }
-        return false;
-    } catch (error) {
-        console.error('Erro ao verificar processo em andamento:', error);
-        // Aguarda um pequeno delay para garantir que o sistema de alertas esteja disponível
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        if (window.alerts) {
-            await window.alerts.add(
-                'Erro ao verificar processo em andamento. Por favor, tente novamente.',
-                'error',
-                null,
-                true
-            );
-        } else {
-            console.error('Sistema de alertas não disponível');
-        }
-        return true; // Em caso de erro, impede a abertura do modal por segurança
-    }
-}; 
+}); 
