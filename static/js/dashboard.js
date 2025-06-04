@@ -363,8 +363,6 @@ const controls = {
         state.simulation.isRunning = true;
 
         document.getElementById('interruptBtn').innerHTML = '<span class="btn-icon">⏸️</span> Interromper';
-        document.querySelector('.time-display').textContent = utils.formatTime(state.simulation.timeRemaining);
-        window.updateProgressCircle(0);
 
         alerts.add('success', `Processo iniciado com ${plant.name}. ${plant.description}`);
         this.publishMQTTCommand('plant', plantId);
@@ -454,12 +452,10 @@ const simulation = {
 
     updateTime() {
         state.simulation.timeRemaining = Math.max(0, state.simulation.timeRemaining - 1);
-        document.querySelector('.time-display').textContent = utils.formatTime(state.simulation.timeRemaining);
     },
 
     updateProgress() {
         state.simulation.progress = 100 - (state.simulation.timeRemaining / CONFIG.PROCESS_DURATION) * 100;
-        window.updateProgressCircle(state.simulation.progress);
     },
 
     updateTemperature() {
@@ -674,12 +670,6 @@ window.updateWaterLevel = function(waterLevel) {
     const percent = Math.max(0, Math.min(100, waterLevel));
     waterFill.style.height = `${percent}%`;
     levelStatus.textContent = percent < 50 ? 'Baixo' : 'Alto';
-};
-
-// Atualiza o círculo de progresso usando o UIUpdater
-window.updateProgressCircle = function(percent) {
-    const uiUpdater = window.UIUpdater;
-    if (uiUpdater) uiUpdater.updateProgressCircle(percent);
 };
 
 // Adicionar handler para o modal de produção

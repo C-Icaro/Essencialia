@@ -19,9 +19,8 @@ const UIUpdater = {
             const processoEmAndamento = await this.processChecker.check();
             const plantNameEl = document.querySelector('.plant-name');
             const materialInputEl = document.querySelector('.material-input');
-            const timeDisplayEl = document.querySelector('.time-display');
             
-            if (!plantNameEl || !materialInputEl || !timeDisplayEl) return;
+            if (!plantNameEl || !materialInputEl) return;
             
             if (processoEmAndamento) {
                 this.state.currentProcess = processoEmAndamento;
@@ -37,7 +36,6 @@ const UIUpdater = {
             console.error('UIUpdater: Erro ao atualizar processo em andamento:', error);
             const plantNameEl = document.querySelector('.plant-name');
             const materialInputEl = document.querySelector('.material-input');
-            const timeDisplayEl = document.querySelector('.time-display');
             
             if (plantNameEl) plantNameEl.textContent = 'Aguardando início de processo';
             if (materialInputEl) materialInputEl.value = '000 gramas';
