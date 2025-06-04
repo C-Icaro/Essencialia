@@ -27,7 +27,7 @@ const RemainingTime = {
             }
 
             const processo = result.processes.find(p => p.status === 'em andamento');
-            if (!processo || !processo.start_time || !processo.tempo_estimado) {
+            if (!processo || !processo.start_time || !processo.tempo_estimado || !processo.finish_time) {
                 this.reset();
                 return;
             }
@@ -40,6 +40,9 @@ const RemainingTime = {
             const [dia, mes, ano] = data.split('/');
             const [h, m, s] = hora.split(':');
             this.startDate = new Date(`${ano}-${mes}-${dia}T${h}:${m}:${s}`);
+            
+            // Usa finish_time UTC do backend
+            this.endTime = new Date(processo.finish_time); // finish_time já está em UTC ISO
             
             // Calcula o tempo final baseado no tempo estimado (em minutos)
             const now = new Date();

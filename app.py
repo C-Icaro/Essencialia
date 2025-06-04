@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, jsonify, g
 from config import BROKER_HOST, BROKER_PORT
 from mqtt.mqtt_handler import start_mqtt, mqtt_data
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import os
 
 app = Flask(__name__)
@@ -29,6 +29,19 @@ def get_processo_em_andamento():
     processo = cursor.fetchone()
     conn.close()
     return processo
+
+def ensure_finish_time_column():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA table_info(process)")
+    columns = [col[1] for col in cursor.fetchall()]
+    if 'finish_time' not in columns:
+        cursor.execute("ALTER TABLE process ADD COLUMN finish_time DATETIME")
+        conn.commit()
+    conn.close()
+
+# Garante que a coluna finish_time existe ao iniciar o app
+ensure_finish_time_column()
 
 @app.route('/api/process', methods=['POST'])
 def create_process():
@@ -66,14 +79,21 @@ def create_process():
         
         # Calcular o tempo estimado usando a fórmula: 0.12 * massa + 20
         quantidade = float(data['quantidade'])
-        tempo_estimado = round(0.12 * quantidade + 20)
+        if quantidade == 1:
+            tempo_estimado = 10 / 60  # 10 segundos em minutos
+        else:
+            tempo_estimado = round(0.12 * quantidade + 20)
         
-        # Insert new process
+        # Usar UTC para start_time e finish_time
+        start_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
+        finish_time = start_dt + timedelta(minutes=tempo_estimado)
+
+        # Insert new process com start_time e finish_time
         cursor.execute('''
             INSERT INTO process (
                 plant_id, operator, quantidade_materia_prima, 
-                parte_utilizada, temp_min, temp_max, tempo_estimado, status
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                parte_utilizada, temp_min, temp_max, tempo_estimado, status, start_time, finish_time
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             plant_id,
             data.get('operator', ''),
@@ -82,9 +102,10 @@ def create_process():
             float(data['temp_min']),
             float(data['temp_max']),
             tempo_estimado,
-            'em andamento'
+            'em andamento',
+            start_dt.isoformat(),
+            finish_time.isoformat()
         ))
-        
         process_id = cursor.lastrowid
         conn.commit()
         conn.close()
@@ -226,6 +247,35 @@ def update_process_time(process_id):
 @app.route('/api/process/active', methods=['GET'])
 def process_active():
     processo = get_processo_em_andamento()
+    if processo:
+        # Verifica se o tempo já passou
+        if processo['start_time'] and processo['tempo_estimado']:
+            # start_time pode estar em formato ISO ou string, garantir datetime
+            if isinstance(processo['start_time'], str):
+                try:
+                    start_dt = datetime.fromisoformat(processo['start_time'])
+                except Exception:
+                    # Tenta formato dd/mm/yyyy HH:MM:SS
+                    try:
+                        start_dt = datetime.strptime(processo['start_time'], '%d/%m/%Y %H:%M:%S')
+                    except Exception:
+                        start_dt = None
+            else:
+                start_dt = processo['start_time']
+            if start_dt:
+                now = datetime.now(timezone.utc)
+                diff_minutes = (now - start_dt).total_seconds() / 60
+                if diff_minutes > processo['tempo_estimado']:
+                    # Finaliza o processo automaticamente
+                    conn = get_db_connection()
+                    cursor = conn.cursor()
+                    cursor.execute('''
+                        UPDATE process SET end_time = ?, status = 'finalizado', notas_operador = ?
+                        WHERE id = ?
+                    ''', (now.isoformat(sep=' '), 'Finalizado automaticamente por tempo excedido', processo['id']))
+                    conn.commit()
+                    conn.close()
+                    return jsonify({'active': False, 'process': None, 'auto_finished': True})
     return jsonify({
         'active': bool(processo),
         'process': dict(processo) if processo else None

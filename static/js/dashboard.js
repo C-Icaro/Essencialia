@@ -546,14 +546,43 @@ function setupCancelProcessButton() {
     });
 }
 
+// Defina o fuso horário da aplicação (pode ser alterado para 'America/Manaus' depois)
+window.APP_TIMEZONE = 'America/Sao_Paulo';
+
+function formatToAppTimezone(utcString, options = {}) {
+    if (!utcString) return '';
+    const date = new Date(utcString);
+    return date.toLocaleString('pt-BR', {
+        timeZone: window.APP_TIMEZONE,
+        ...options
+    });
+}
+
+// Exemplo de uso: exibir start_time e finish_time se existirem
+function updateProcessTimesOnDashboard(processo) {
+    if (!processo) return;
+    const startTimeEl = document.querySelector('.start-time');
+    const finishTimeEl = document.querySelector('.finish-time');
+    if (startTimeEl && processo.start_time) {
+        startTimeEl.textContent = formatToAppTimezone(processo.start_time);
+    }
+    if (finishTimeEl && processo.finish_time) {
+        finishTimeEl.textContent = formatToAppTimezone(processo.finish_time);
+    }
+}
+
 // Inicialização da aplicação
 document.addEventListener('DOMContentLoaded', async () => {
     // Buscar processo em andamento ao carregar a página
     try {
         const resp = await fetch('/api/process/active');
         const data = await resp.json();
+        if (data.auto_finished) {
+            alert('Processo finalizado automaticamente por tempo excedido!');
+        }
         if (data.active && data.process && data.process.id) {
             window.currentProcessId = data.process.id;
+            updateProcessTimesOnDashboard(data.process);
         } else {
             window.currentProcessId = null;
         }
