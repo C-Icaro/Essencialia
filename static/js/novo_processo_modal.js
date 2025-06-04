@@ -1,26 +1,49 @@
 // static/js/novo_processo_modal.js
 document.addEventListener('DOMContentLoaded', function() {
-    // Abrir modal ao clicar em qualquer botão de novo processo
-    function abrirModalNovoProcesso(e) {
-      if (e) e.preventDefault();
-      document.getElementById('novo-processo-modal').style.display = 'block';
+    // Inicializa o ProcessChecker
+    const processChecker = window.ProcessChecker.init();
+
+    // Função para adicionar alerta no quadro de avisos
+    async function adicionarAlerta(mensagem, tipo = 'error') {
+        // Usa o sistema de alertas do dashboard
+        if (window.alerts) {
+            await window.alerts.add(mensagem, tipo, null, true);
+        } else {
+            console.error('Sistema de alertas não disponível');
+        }
     }
+
+    // Abrir modal ao clicar em qualquer botão de novo processo
+    async function abrirModalNovoProcesso(e) {
+        if (e) e.preventDefault();
+        
+        // Verifica se existe processo em andamento usando o ProcessChecker
+        const temProcessoEmAndamento = await processChecker.hasActiveProcess();
+        if (temProcessoEmAndamento) {
+            return; // Não abre o modal se houver processo em andamento
+        }
+        
+        document.getElementById('novo-processo-modal').style.display = 'block';
+    }
+
     // Para todos os botões com a classe .new-process-btn
     document.querySelectorAll('.new-process-btn').forEach(btn => {
-      btn.removeEventListener('click', abrirModalNovoProcesso); // previne duplicidade
-      btn.addEventListener('click', abrirModalNovoProcesso);
+        btn.removeEventListener('click', abrirModalNovoProcesso); // previne duplicidade
+        btn.addEventListener('click', abrirModalNovoProcesso);
     });
+
     // Para o card amarelo (caso não tenha a classe new-process-btn)
     const homeCardYellow = document.querySelector('.home-card.yellow');
     if (homeCardYellow) {
-      homeCardYellow.removeEventListener('click', abrirModalNovoProcesso);
-      homeCardYellow.addEventListener('click', abrirModalNovoProcesso);
+        homeCardYellow.removeEventListener('click', abrirModalNovoProcesso);
+        homeCardYellow.addEventListener('click', abrirModalNovoProcesso);
     }
+
     // Para o card com id new-process-card
     const newProcessCard = document.getElementById('new-process-card');
     if (newProcessCard) {
-      newProcessCard.removeEventListener('click', abrirModalNovoProcesso);
-      newProcessCard.addEventListener('click', abrirModalNovoProcesso);
+        newProcessCard.removeEventListener('click', abrirModalNovoProcesso);
+        newProcessCard.addEventListener('click', abrirModalNovoProcesso);
     }
   
     // Fechar modal ao clicar em cancelar
@@ -42,20 +65,59 @@ document.addEventListener('DOMContentLoaded', function() {
     // Submissão do formulário
     const form = document.getElementById('novo-processo-form');
     if (form) {
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        document.getElementById('novo-processo-modal').style.display = 'none';
-        // Coleta os dados do formulário
-        const planta = form.querySelector('select[name="planta"]').value;
-        const quantidade = form.querySelector('input[name="quantidade"]').value;
-        const parte = form.querySelector('select[name="parte"]').value;
-        const duracao = form.querySelector('#duracao-estimada').value;
-        // Dispara evento customizado para o dashboard
-        window.dispatchEvent(new CustomEvent('novoProcessoIniciado', {
-          detail: { planta, quantidade, parte, duracao }
-        }));
-        alert('Processo iniciado com sucesso!');
-      });
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            try {
+                const formData = {
+                    planta: form.querySelector('select[name="planta"]').value,
+                    quantidade: form.querySelector('input[name="quantidade"]').value,
+                    parte: form.querySelector('select[name="parte"]').value,
+                    temp_min: form.querySelector('input[name="temp_min"]').value,
+                    temp_max: form.querySelector('input[name="temp_max"]').value,
+                    operator: 'Operador 1' // TODO: Implementar seleção de operador
+                };
+
+                const response = await fetch('/api/process', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Armazena o ID do processo para uso posterior
+                    window.currentProcessId = result.process_id;
+                    
+                    // Fecha o modal
+                    document.getElementById('novo-processo-modal').style.display = 'none';
+                    
+                    // Dispara evento customizado para o dashboard
+                    window.dispatchEvent(new CustomEvent('novoProcessoIniciado', {
+                        detail: { 
+                            ...formData,
+                            duracao: document.getElementById('duracao-estimada').value,
+                            process_id: result.process_id
+                        }
+                    }));
+                    
+                    alert('Processo iniciado com sucesso!');
+                } else {
+                    // Verifica se é o erro de processo em andamento
+                    if (result.error && result.error.includes('Já existe um processo em andamento')) {
+                        alert('Não é possível iniciar um novo processo enquanto houver outro em andamento.\n\nPor favor, finalize o processo atual antes de iniciar um novo.');
+                    } else {
+                        throw new Error(result.error || 'Erro ao iniciar processo');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao iniciar processo: ' + error.message);
+            }
+        });
     }
   
     // Atualizar duração estimada ao digitar a quantidade

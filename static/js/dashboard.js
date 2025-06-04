@@ -109,182 +109,6 @@ const utils = {
     }
 };
 
-// Gerenciamento de Alertas
-const alerts = {
-    async fetch() {
-        try {
-            const response = await utils.fetchWithTimeout('/alerts');
-            const data = await response.json();
-            this.render(data);
-        } catch (error) {
-            console.error('Erro ao buscar alertas:', error);
-            this.add('error', 'Erro ao carregar alertas');
-        }
-    },
-
-    render(alerts) {
-        const alertList = document.querySelector('.alert-list');
-        if (!alertList) return;
-
-        alertList.innerHTML = '';
-        alerts.forEach(alert => this.createAlertElement(alert, alertList));
-    },
-
-    createAlertElement(alert, container) {
-        const alertElement = document.createElement('div');
-        alertElement.className = `alert ${alert.type}`;
-        const icon = this.getAlertIcon(alert.type);
-        alertElement.innerHTML = `
-            <div class="alert-header">
-                <span class="alert-icon">${icon}</span>
-            </div>
-            <div class='alert-details'>${alert.message}</div>
-            <button class="close-alert">×</button>
-        `;
-        this.setupAlertInteractions(alertElement, alert);
-        container.appendChild(alertElement);
-    },
-
-    getAlertIcon(type) {
-        const icons = {
-            success: '✅',
-            error: '⚠️',
-            info: 'ℹ️',
-            warning: '⚠️'
-        };
-        return icons[type] || 'ℹ️';
-    },
-
-    getAlertContent(alert) {
-        if (alert.type === 'falha' && alert.data) {
-            return this.formatFailureAlert(alert.data);
-        }
-        return `<div class='alert-details'>${alert.message}</div>`;
-    },
-
-    formatFailureAlert(data) {
-        const fields = ['tipo', 'horario', 'duracao_sec', 'solucao'];
-        return `
-            <div class='alert-details'>
-                ${fields.map(field => 
-                    data[field] ? `<div><b>${field}:</b> ${field === 'horario' ? 
-                        utils.formatAlertTime(data[field]) : data[field]}</div>` : ''
-                ).join('')}
-            </div>
-        `;
-    },
-
-    setupAlertInteractions(element, alert) {
-        const closeBtn = element.querySelector('.close-alert');
-        if (closeBtn && alert && alert.id) {
-            closeBtn.addEventListener('click', async () => {
-                try {
-                    const response = await fetch(`/alerts/resolve/${alert.id}`, {
-                        method: 'POST'
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        element.style.display = 'none';
-                    }
-                } catch (error) {
-                    console.error('Erro ao resolver alerta:', error);
-                }
-            });
-        } else if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-                element.style.display = 'none';
-            });
-        }
-    },
-
-    add(type, message, data = null) {
-        const alertList = document.querySelector('.alert-list');
-        if (!alertList) return;
-
-        const alertElement = document.createElement('div');
-        alertElement.className = `alert ${type}`;
-        
-        const icon = this.getAlertIcon(type);
-        const details = this.formatAlertDetails(type, data);
-        
-        alertElement.innerHTML = `
-            <div class="alert-header">
-                <span class="alert-icon">${icon}</span>
-                <span class="alert-text">${message}</span>
-                <button class="close-alert">×</button>
-            </div>
-            ${details}
-            <div class="alert-footer">
-                <span class="alert-time">Agora mesmo</span>
-            </div>
-        `;
-
-        this.setupAlertInteractions(alertElement);
-        alertList.prepend(alertElement);
-
-        if (!alertElement.dataset.alertId) {
-            setTimeout(() => {
-                alertElement.style.opacity = '0';
-                alertElement.style.transition = 'opacity 0.5s';
-                setTimeout(() => alertElement.remove(), 500);
-            }, 5000);
-        }
-    },
-
-    formatAlertDetails(type, data) {
-        if (!data) return '';
-        
-        const templates = {
-            temperature: `
-                <div class="alert-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Temperatura:</span>
-                        <span class="detail-value">${data.temperatura}°C</span>
-                    </div>
-                    ${data.limite ? `
-                    <div class="detail-item">
-                        <span class="detail-label">Limite:</span>
-                        <span class="detail-value">${data.limite}°C</span>
-                    </div>` : ''}
-                </div>`,
-            pressure: data.variacao ? `
-                <div class="alert-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Pressão Atual:</span>
-                        <span class="detail-value">${data.pressao_atual} kPa</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Pressão Anterior:</span>
-                        <span class="detail-value">${data.pressao_anterior} kPa</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Variação:</span>
-                        <span class="detail-value">${data.variacao.toFixed(1)} kPa</span>
-                    </div>
-                </div>` : `
-                <div class="alert-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Pressão:</span>
-                        <span class="detail-value">${data.pressao} kPa</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Limite:</span>
-                        <span class="detail-value">${data.limite} kPa</span>
-                    </div>
-                </div>`,
-            water_level: `
-                <div class="alert-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Nível:</span>
-                        <span class="detail-value">${data.nivel}</span>
-                    </div>
-                </div>`
-        };
-
-        return templates[type] || '';
-    }
-};
-
 // Gerenciamento de Gráficos
 const charts = {
     commonOptions: {
@@ -586,10 +410,6 @@ const realtime = {
             
             state.simulation.useRealData = true;
 
-            if (!state.simulation.currentPlant) {
-                document.querySelector('.plant-name').innerText = 'Manjericão';
-            }
-
             const tempValue = parseFloat(data.temperatura) || 0;
             document.querySelector('.temp-value').innerText = `${tempValue.toFixed(1)} °C`;
             state.simulation.temperature = tempValue;
@@ -693,7 +513,13 @@ const simulation = {
 };
 
 // Inicialização da aplicação
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Inicializa o UIUpdater
+    const uiUpdater = window.UIUpdater.init();
+
+    // Inicia atualizações periódicas do processo
+    uiUpdater.startPeriodicUpdates();
+
     // Inicializar componentes
     charts.init();
     controls.init();
@@ -702,7 +528,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(() => {
         realtime.update();
         charts.update();
-        alerts.fetch();
     }, CONFIG.UPDATE_INTERVAL);
     
     // Iniciar simulação
@@ -711,7 +536,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Primeira atualização
     realtime.update();
     charts.update();
-    alerts.fetch();
 
     // Adiciona funcionalidade ao botão de abrir modal de produção
     const btnProducao = document.getElementById('abrir-producao-modal-btn');
@@ -751,58 +575,35 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('.plant-info').appendChild(duracaoEl);
         }
         duracaoEl.textContent = `Duração estimada: ${duracao}`;
+
+        // Inicia o contador circular se houver duração
+        if (duracao) {
+            const match = duracao.match(/(\d+)/);
+            if (match) {
+                const minutos = parseInt(match[1], 10);
+                if (minutos > 0) {
+                    uiUpdater.startCircularCountdown(minutos * 60);
+                }
+            }
+        }
+    });
+
+    // Escuta evento de conclusão do contador
+    window.addEventListener('countdownComplete', function() {
+        alerts.add('success', 'Processo concluído com sucesso!');
+        // Abre o modal de produção automaticamente
+        const producaoModal = document.getElementById('producao-modal');
+        if (producaoModal) producaoModal.style.display = 'block';
     });
 });
 
-// Atualiza o gauge de pressão desenhando o arco no canvas
+// Atualiza o gauge de pressão usando o UIUpdater
 window.updatePressureGauge = function(pressure) {
-    const gaugeValue = document.querySelector('.gauge-value');
-    const gaugeLabel = document.querySelector('.gauge-label');
-    const canvas = document.getElementById('pressureGauge');
-    if (!gaugeValue || !gaugeLabel || !canvas) return;
-    let estado = 'Normal';
-    let cor = '#8BC34A';
-    if (pressure < 20) {
-        estado = 'Baixa';
-        cor = '#4CAF50';
-    } else if (pressure < 40) {
-        estado = 'Normal';
-        cor = '#8BC34A';
-    } else if (pressure < 70) {
-        estado = 'Atenção';
-        cor = '#FFC107';
-    } else {
-        estado = 'Risco';
-        cor = '#F44336';
-    }
-    gaugeValue.textContent = `${pressure.toFixed(0).padStart(2, '0')} kPa`;
-    gaugeLabel.textContent = `Estado: ${estado}`;
-    gaugeValue.style.color = cor;
-
-    // Desenhar arco do gauge
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height - 10;
-    const radius = Math.min(canvas.width, canvas.height * 2) / 2 - 20;
-    const startAngle = Math.PI;
-    const endAngle = 0;
-    // Fundo do arco
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, startAngle, endAngle, false);
-    ctx.lineWidth = 18;
-    ctx.strokeStyle = '#eee';
-    ctx.stroke();
-    // Arco colorido proporcional à pressão
-    const percent = Math.max(0, Math.min(1, pressure / 100));
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, startAngle, startAngle + Math.PI * percent, false);
-    ctx.lineWidth = 18;
-    ctx.strokeStyle = cor;
-    ctx.stroke();
+    const uiUpdater = window.UIUpdater;
+    if (uiUpdater) uiUpdater.updatePressureGauge(pressure);
 };
 
-// Adiciona função para atualizar o nível de água
+// Atualiza o nível de água
 window.updateWaterLevel = function(waterLevel) {
     const waterFill = document.getElementById('waterFill');
     const levelStatus = document.querySelector('.level-status');
@@ -813,73 +614,73 @@ window.updateWaterLevel = function(waterLevel) {
     levelStatus.textContent = percent < 50 ? 'Baixo' : 'Alto';
 };
 
-// Corrige duplicidade de alertas: limpa a lista antes de renderizar
-alerts.render = function(alertsArr) {
-    const alertList = document.querySelector('.alert-list');
-    if (!alertList) return;
-    alertList.innerHTML = '';
-    alertsArr.forEach(alert => this.createAlertElement(alert, alertList));
-};
-
-// Função para desenhar o contador circular de tempo restante
+// Atualiza o círculo de progresso usando o UIUpdater
 window.updateProgressCircle = function(percent) {
-    const canvas = document.getElementById('progressCircle');
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-    const radius = 65;
-    // Fundo
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-    ctx.strokeStyle = '#eee';
-    ctx.lineWidth = 14;
-    ctx.stroke();
-    // Arco de progresso
-    ctx.beginPath();
-    ctx.arc(centerX, centerY, radius, -Math.PI/2, -Math.PI/2 + 2 * Math.PI * percent / 100, false);
-    ctx.strokeStyle = '#4FCB98';
-    ctx.lineWidth = 14;
-    ctx.stroke();
+    const uiUpdater = window.UIUpdater;
+    if (uiUpdater) uiUpdater.updateProgressCircle(percent);
 };
 
-// Atualiza o contador circular e o tempo restante
-function startCircularCountdown(durationSec) {
-    let remaining = durationSec;
-    const timeDisplay = document.querySelector('.time-display');
-    const progressText = document.querySelector('.progress-text');
-    if (!timeDisplay) return;
-    if (window._countdownInterval) clearInterval(window._countdownInterval);
-    function update() {
-        const percent = 100 * (remaining / durationSec);
-        const h = Math.floor(remaining / 3600);
-        const m = Math.floor((remaining % 3600) / 60);
-        const s = remaining % 60;
-        const timeStr = [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
-        timeDisplay.textContent = timeStr;
-        progressText.textContent = `${Math.round(percent)}%`;
-        window.updateProgressCircle(percent);
-        if (remaining <= 0) {
-            clearInterval(window._countdownInterval);
-        } else {
-            remaining--;
-        }
-    }
-    update();
-    window._countdownInterval = setInterval(update, 1000);
-}
+// Adicionar handler para o modal de produção
+document.addEventListener('DOMContentLoaded', function() {
+    const producaoForm = document.getElementById('producao-form');
+    const volumeInput = document.querySelector('input[name="volume_extraido"]');
+    const rendimentoInput = document.getElementById('rendimento-extracao');
+    const quantidadeOriginal = document.querySelector('.material-input')?.value;
 
-// Escuta evento customizado do novo processo para iniciar o contador
-window.addEventListener('novoProcessoIniciado', function(e) {
-    let duracao = e.detail.duracao;
-    // Extrai número de minutos do texto (ex: '44 minutos')
-    let minutos = 0;
-    if (duracao) {
-        const match = duracao.match(/(\d+)/);
-        if (match) minutos = parseInt(match[1], 10);
-    }
-    if (minutos > 0) {
-        startCircularCountdown(minutos * 60);
+    if (producaoForm && volumeInput && rendimentoInput) {
+        // Calcular rendimento quando o volume é alterado
+        volumeInput.addEventListener('input', function() {
+            const volume = parseFloat(this.value) || 0;
+            const quantidade = parseFloat(quantidadeOriginal?.match(/(\d+)/)?.[1] || 0);
+            
+            if (quantidade > 0) {
+                const rendimento = (volume / quantidade) * 100;
+                rendimentoInput.value = rendimento.toFixed(2) + '%';
+            } else {
+                rendimentoInput.value = '';
+            }
+        });
+
+        // Handler para submissão do formulário
+        producaoForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (!window.currentProcessId) {
+                alert('Erro: ID do processo não encontrado');
+                return;
+            }
+
+            try {
+                const formData = {
+                    volume_extraido: parseFloat(volumeInput.value),
+                    rendimento: parseFloat(rendimentoInput.value),
+                    notas_operador: document.querySelector('textarea[name="notas_operador"]').value
+                };
+
+                const response = await fetch(`/api/process/${window.currentProcessId}/finish`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('producao-modal').style.display = 'none';
+                    alert('Processo finalizado com sucesso!');
+                    // Limpar o ID do processo atual
+                    window.currentProcessId = null;
+                    // Recarregar a página para atualizar o estado
+                    window.location.reload();
+                } else {
+                    throw new Error(result.error || 'Erro ao finalizar processo');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro ao finalizar processo: ' + error.message);
+            }
+        });
     }
 }); 
