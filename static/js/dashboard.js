@@ -512,8 +512,55 @@ const simulation = {
     }
 };
 
+// Handler para cancelar processo
+function setupCancelProcessButton() {
+    const cancelBtn = document.getElementById('cancelProcessBtn');
+    if (!cancelBtn) return;
+    cancelBtn.addEventListener('click', async () => {
+        if (!window.currentProcessId) {
+            alert('Nenhum processo em andamento para cancelar.');
+            return;
+        }
+        if (!confirm('Tem certeza que deseja cancelar o processo em andamento?')) return;
+        try {
+            const response = await fetch(`/api/process/${window.currentProcessId}/finish`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    volume_extraido: 0,
+                    rendimento: 0,
+                    notas_operador: 'Processo cancelado pelo operador.'
+                })
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('Processo cancelado com sucesso!');
+                window.currentProcessId = null;
+                window.location.reload();
+            } else {
+                throw new Error(result.error || 'Erro ao cancelar processo');
+            }
+        } catch (error) {
+            alert('Erro ao cancelar processo: ' + error.message);
+        }
+    });
+}
+
 // Inicialização da aplicação
 document.addEventListener('DOMContentLoaded', async () => {
+    // Buscar processo em andamento ao carregar a página
+    try {
+        const resp = await fetch('/api/process/active');
+        const data = await resp.json();
+        if (data.active && data.process && data.process.id) {
+            window.currentProcessId = data.process.id;
+        } else {
+            window.currentProcessId = null;
+        }
+    } catch (e) {
+        window.currentProcessId = null;
+    }
+
     // Inicializa os componentes
     const processChecker = window.ProcessChecker.init();
     const uiUpdater = window.UIUpdater.init();
@@ -585,6 +632,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Inicia atualizações periódicas do UI
     uiUpdater.startPeriodicUpdates();
+
+    setupCancelProcessButton();
 });
 
 // Atualiza o gauge de pressão usando o UIUpdater

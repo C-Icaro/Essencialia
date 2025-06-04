@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, g
 from config import BROKER_HOST, BROKER_PORT
 from mqtt.mqtt_handler import start_mqtt, mqtt_data
 import sqlite3
@@ -17,6 +17,18 @@ def get_db_connection():
     conn = sqlite3.connect('data.db')
     conn.row_factory = sqlite3.Row
     return conn
+
+@app.before_request
+def check_processo_em_andamento():
+    g.processo_em_andamento = get_processo_em_andamento()
+
+def get_processo_em_andamento():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM process WHERE status = 'em andamento'")
+    processo = cursor.fetchone()
+    conn.close()
+    return processo
 
 @app.route('/api/process', methods=['POST'])
 def create_process():
@@ -210,6 +222,14 @@ def update_process_time(process_id):
             return jsonify({'success': False, 'error': 'tempo_estimado é obrigatório'}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/process/active', methods=['GET'])
+def process_active():
+    processo = get_processo_em_andamento()
+    return jsonify({
+        'active': bool(processo),
+        'process': dict(processo) if processo else None
+    })
 
 from routes import *
 
