@@ -626,13 +626,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelector('.part-used').textContent = part_used;
         document.querySelector('.estimated-duration').textContent = `${tempo_estimado} minutos`;
 
-        // Reinicia o contador com o tempo estimado
+        // Reinicia o contador com o tempo estimado (mantido apenas o RemainingTime)
         if (remainingTime) {
             await remainingTime.start();
         }
-
-        // Atualiza a UI
-        uiUpdater.updateCurrentProcess();
     });
 
     // Evento de conclusão do processo
@@ -652,15 +649,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             await charts.update();
             await realtime.update();
             
-            // Reinicia o contador quando a página volta a ficar visível
+            // Reinicia o contador quando a página volta a ficar visível (mantido apenas o RemainingTime)
             if (remainingTime) {
                 await remainingTime.start();
             }
         }
     });
-
-    // Inicia atualizações periódicas do UI
-    uiUpdater.startPeriodicUpdates();
 
     setupCancelProcessButton();
 });

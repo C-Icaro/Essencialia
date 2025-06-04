@@ -1,11 +1,13 @@
 const RemainingTime = {
     intervalId: null,
+    updateEstimatedInterval: null,
     el: null,
     processId: null,
     endTime: null,
     tempoEstimado: null,
     startDate: null,
     lastUpdate: null,
+    startTime: null,
 
     async init(selector = '.time-display') {
         this.el = document.querySelector(selector);
@@ -16,6 +18,7 @@ const RemainingTime = {
 
     async start() {
         if (this.intervalId) clearInterval(this.intervalId);
+        if (this.updateEstimatedInterval) clearInterval(this.updateEstimatedInterval);
 
         try {
             const response = await fetch('/api/process');
@@ -34,20 +37,20 @@ const RemainingTime = {
 
             this.processId = processo.id;
             this.tempoEstimado = parseInt(processo.tempo_estimado);
-            this.endTime = new Date(processo.finish_time); // finish_time já está em UTC ISO
+            this.startTime = new Date(processo.start_time); // UTC
+            this.endTime = new Date(processo.finish_time); // UTC
             this.lastUpdate = new Date();
 
             // Atualiza imediatamente e inicia o intervalo
             await this.update();
             this.intervalId = setInterval(() => this.update(), 1000);
-
-            // Atualiza o tempo estimado no banco a cada minuto
-            setInterval(() => this.updateEstimatedTime(), 60000);
+            this.updateEstimatedInterval = setInterval(() => this.updateEstimatedTime(), 60000);
 
             // Log para debug
             console.log('RemainingTime iniciado:', {
                 processId: this.processId,
                 tempoEstimado: this.tempoEstimado,
+                startTime: this.startTime,
                 endTime: this.endTime
             });
 
@@ -58,7 +61,7 @@ const RemainingTime = {
     },
 
     async update() {
-        if (!this.el || !this.endTime) return;
+        if (!this.el || !this.endTime || !this.startTime) return;
 
         try {
             const now = new Date();
@@ -76,8 +79,8 @@ const RemainingTime = {
             const s = diff % 60;
             this.setTime(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
 
-            // Atualiza o círculo de progresso
-            const total = this.tempoEstimado * 60; // Converte minutos para segundos
+            // Corrigir cálculo do progresso
+            const total = (this.endTime - this.startTime) / 1000; // total em segundos
             const elapsed = total - diff;
             const percent = Math.max(0, Math.min(100, (elapsed / total) * 100));
             this.updateProgressCircle(percent);
@@ -177,6 +180,10 @@ const RemainingTime = {
             clearInterval(this.intervalId);
             this.intervalId = null;
         }
+        if (this.updateEstimatedInterval) {
+            clearInterval(this.updateEstimatedInterval);
+            this.updateEstimatedInterval = null;
+        }
     },
 
     reset() {
@@ -188,6 +195,7 @@ const RemainingTime = {
         this.tempoEstimado = null;
         this.startDate = null;
         this.lastUpdate = null;
+        this.startTime = null;
     }
 };
 
