@@ -139,9 +139,9 @@ def finish_process(process_id):
                 status = 'finalizado'
             WHERE id = ?
         ''', (
-            float(data['volume_extraido']),
-            float(data['rendimento']),
-            data['notas_operador'],
+            float(data.get('volume_extraido') or 0),
+            float(data.get('rendimento') or 0),
+            data.get('notas_operador', ''),
             process_id
         ))
         

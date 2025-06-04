@@ -34,30 +34,8 @@ const RemainingTime = {
 
             this.processId = processo.id;
             this.tempoEstimado = parseInt(processo.tempo_estimado);
-            
-            // Converte start_time do formato dd/mm/yyyy HH:MM:SS para Date
-            const [data, hora] = processo.start_time.split(' ');
-            const [dia, mes, ano] = data.split('/');
-            const [h, m, s] = hora.split(':');
-            this.startDate = new Date(`${ano}-${mes}-${dia}T${h}:${m}:${s}`);
-            
-            // Usa finish_time UTC do backend
             this.endTime = new Date(processo.finish_time); // finish_time já está em UTC ISO
-            
-            // Calcula o tempo final baseado no tempo estimado (em minutos)
-            const now = new Date();
-            const elapsedMinutes = Math.floor((now - this.startDate) / (60 * 1000));
-            const remainingMinutes = Math.max(0, this.tempoEstimado - elapsedMinutes);
-            
-            // Se o processo já acabou
-            if (remainingMinutes <= 0) {
-                await this.handleProcessCompletion();
-                return;
-            }
-
-            // Define o tempo final baseado no tempo restante
-            this.endTime = new Date(now.getTime() + (remainingMinutes * 60 * 1000));
-            this.lastUpdate = now;
+            this.lastUpdate = new Date();
 
             // Atualiza imediatamente e inicia o intervalo
             await this.update();
@@ -70,10 +48,7 @@ const RemainingTime = {
             console.log('RemainingTime iniciado:', {
                 processId: this.processId,
                 tempoEstimado: this.tempoEstimado,
-                startDate: this.startDate,
-                endTime: this.endTime,
-                elapsedMinutes,
-                remainingMinutes
+                endTime: this.endTime
             });
 
         } catch (error) {
