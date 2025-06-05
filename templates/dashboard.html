@@ -1,6 +1,5 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
+{% extends 'base.html' %}
+{% block head %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Essenciália - Dashboard</title>
@@ -8,16 +7,14 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/novo_processo_modal.css') }}">
-    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/dist/date-fns.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/dist/locale/pt-BR.min.js"></script>
+    <!-- Remova ou comente estas linhas -->
+    <!-- <script src="static/js/date-fns.min.js"></script> -->
+    <!-- <script src="static/js/pt-BR.min.js"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.1/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
-    <script>
-        // Configurar o locale do Chart.js
-        Chart.defaults.locale = 'pt-BR';
-    </script>
-</head>
-<body>
+{% endblock %}
+
+{% block content %}
     <div class="container">
         <!-- Sidebar -->
         <aside class="sidebar">
@@ -215,14 +212,10 @@
     {% include 'components/novo_processo_modal.html' %}
     {% include 'components/producao_modal.html' %}
     
-    <!-- Componentes -->
-    <script src="{{ url_for('static', filename='js/components/alerts.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/components/process_checker.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/components/remaining_time.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/components/ui_updater.js') }}"></script>
-    
     <!-- Scripts específicos da página -->
-    <script src="{{ url_for('static', filename='js/novo_processo_modal.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
-</body>
-</html>
+{% endblock %} <!-- Fecha o bloco body -->
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/novo_processo_modal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

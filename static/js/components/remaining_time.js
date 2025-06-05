@@ -81,6 +81,10 @@ const RemainingTime = {
 
             // Corrigir cálculo do progresso
             const total = (this.endTime - this.startTime) / 1000; // total em segundos
+            if (total <= 0) {
+                this.updateProgressCircle(0);
+                return;
+            }
             const elapsed = total - diff;
             const percent = Math.max(0, Math.min(100, (elapsed / total) * 100));
             this.updateProgressCircle(percent);
@@ -200,8 +204,4 @@ const RemainingTime = {
 };
 
 // Expor globalmente
-window.RemainingTime = RemainingTime;
-
-document.addEventListener('DOMContentLoaded', () => {
-    RemainingTime.init('.time-display');
-}); 
+window.RemainingTime = RemainingTime; 

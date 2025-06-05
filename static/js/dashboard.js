@@ -353,8 +353,11 @@ const controls = {
         state.simulation.currentPlant = plantId;
         const plant = PLANTS[plantId];
 
-        document.querySelector('.plant-name').innerText = plant.name;
-        document.querySelector('.current-temp').textContent = `${recommendedTemp} °C`;
+        const plantNameEl = document.querySelector('.plant-name');
+        if (plantNameEl) plantNameEl.innerText = plant.name;
+
+        const currentTempEl = document.querySelector('.current-temp');
+        if (currentTempEl) currentTempEl.textContent = `${recommendedTemp} °C`;
 
         this.addRecommendedIndicators(recommendedTemp, recommendedPressure);
 
@@ -362,7 +365,10 @@ const controls = {
         state.simulation.progress = 0;
         state.simulation.isRunning = true;
 
-        document.getElementById('interruptBtn').innerHTML = '<span class="btn-icon">⏸️</span> Interromper';
+        const interruptBtn = document.getElementById('interruptBtn');
+        if (interruptBtn) {
+            interruptBtn.innerHTML = '<span class="btn-icon">⏸️</span> Interromper';
+        }
 
         alerts.add('success', `Processo iniciado com ${plant.name}. ${plant.description}`);
         this.publishMQTTCommand('plant', plantId);
@@ -375,7 +381,9 @@ const controls = {
         if (!tempDisplay || !pressureDisplay) return;
 
         this.updateRecommendedIndicator(tempDisplay, `Meta: ${recommendedTemp}°C`);
-        this.updateRecommendedIndicator(pressureDisplay.parentElement, `Meta: ${recommendedPressure} Pa`);
+        if (pressureDisplay.parentElement) {
+            this.updateRecommendedIndicator(pressureDisplay.parentElement, `Meta: ${recommendedPressure} Pa`);
+        }
     },
 
     updateRecommendedIndicator(container, text) {
@@ -409,7 +417,8 @@ const realtime = {
             state.simulation.useRealData = true;
 
             const tempValue = parseFloat(data.temperatura) || 0;
-            document.querySelector('.temp-value').innerText = `${tempValue.toFixed(1)} °C`;
+            const tempValueEl = document.querySelector('.temp-value');
+            if (tempValueEl) tempValueEl.innerText = `${tempValue.toFixed(1)} °C`;
             state.simulation.temperature = tempValue;
 
             const waterLevel = data.nivel === 'ALTO' ? 80 : 20;
@@ -461,8 +470,11 @@ const simulation = {
     updateTemperature() {
         state.simulation.temperature = Math.min(CONFIG.MAX_TEMPERATURE, 
             state.simulation.temperature + 0.2);
-        document.querySelector('.temp-value').textContent = 
-            `${Math.floor(state.simulation.temperature)} °C`;
+        const tempValueEl = document.querySelector('.temp-value');
+        if (tempValueEl) {
+            tempValueEl.textContent = 
+                `${Math.floor(state.simulation.temperature)} °C`;
+        }
         window.updateTemperatureChart(state.simulation.temperature);
     },
 
@@ -622,9 +634,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelector('.part-used').textContent = part_used;
         document.querySelector('.estimated-duration').textContent = `${tempo_estimado} minutos`;
 
-        // Reinicia o contador com o tempo estimado (mantido apenas o RemainingTime)
+        // Reinicia o contador com o tempo estimado (delay para garantir atualização do backend)
         if (remainingTime) {
-            await remainingTime.start();
+            setTimeout(() => remainingTime.start(), 700);
         }
     });
 
@@ -735,4 +747,4 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-}); 
+});
