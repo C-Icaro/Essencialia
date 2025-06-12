@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Essenciália - Home</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/novo_processo_modal.css') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
     <style>
         body {
@@ -156,7 +157,7 @@
                 </div>
             </div>
             <div class="home-cards">
-                <a href="#" class="home-card yellow" id="new-process-card">
+                <a href="#" class="home-card yellow new-process-btn" id="new-process-card">
                     <span class="icon">➕</span>
                     Novo processo
                 </a>
@@ -179,16 +180,9 @@
             </div>
         </main>
     </div>
-    <script>
-    // Abrir modal ao clicar no card de novo processo
-    const newProcessCard = document.getElementById('new-process-card');
-    if (newProcessCard) {
-        newProcessCard.addEventListener('click', function(e) {
-            e.preventDefault();
-            const modal = document.getElementById('plantSelectionModal');
-            if (modal) modal.style.display = 'block';
-        });
-    }
-    </script>
+    {% include 'components/novo_processo_modal.html' %}
+    <script src="{{ url_for('static', filename='js/components/alerts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/process_checker.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/novo_processo_modal.js') }}"></script>
 </body>
 </html>

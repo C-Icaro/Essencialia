@@ -6,6 +6,7 @@
     <title>Essenciália - Biblioteca</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/biblioteca.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/novo_processo_modal.css') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
 </head>
 <body>
@@ -108,8 +109,8 @@
                         </div>
                         
                         <div class="article-card">
-                            <div class="article-icon">🌴</div>
-                            <h4>Copaíba</h4>
+                            <div class="article-icon">🌱</div>
+                            <h4>Hortelã</h4>
                             <p>Orientações para extração responsável e conservação da biodiversidade.</p>
                             <a href="#" class="read-more">Ler mais</a>
                         </div>
@@ -120,77 +121,16 @@
                             <p>Informações sobre selos como orgânico, manejo florestal e comércio justo.</p>
                             <a href="#" class="read-more">Ler mais</a>
                         </div>
-                        
-                        <div class="article-card">
-                            <div class="article-icon">🌱</div>
-                            <h4>Propriedades terapêuticas dos óleos essenciais amazônicos</h4>
-                            <p>Efeitos medicinais e usos populares dos óleos extraídos da biodiversidade amazônica.</p>
-                            <a href="#" class="read-more">Ler mais</a>
-                        </div>
-                        
-                        <div class="article-card">
-                            <div class="article-icon">🌲</div>
-                            <h4>Pau-Rosa</h4>
-                            <p>Orientações para extração responsável e conservação da biodiversidade.</p>
-                            <a href="#" class="read-more">Ler mais</a>
-                        </div>
-                        
-                        <div class="article-card">
-                            <div class="article-icon">🌿</div>
-                            <h4>Priprioca</h4>
-                            <p>Informações sobre selos como orgânico, manejo florestal e comércio justo.</p>
-                            <a href="#" class="read-more">Ler mais</a>
-                        </div>
                     </div>
                 </section>
             </div>
         </main>
     </div>
     
-    <!-- Modal de Seleção de Plantas -->
-    <div class="modal" id="plantSelectionModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Selecione a Planta</h3>
-                <span class="close-modal">&times;</span>
-            </div>
-            <div class="modal-body">
-                <div class="plant-grid">
-                    <div class="plant-card" data-plant="lavanda" data-temp="60" data-pressure="25">
-                        <div class="plant-icon">🌿</div>
-                        <h4>Lavanda</h4>
-                        <p>Temperatura: 60°C</p>
-                        <p>Pressão: 25 Pa</p>
-                    </div>
-                    <div class="plant-card" data-plant="eucalipto" data-temp="70" data-pressure="30">
-                        <div class="plant-icon">🌱</div>
-                        <h4>Eucalipto</h4>
-                        <p>Temperatura: 70°C</p>
-                        <p>Pressão: 30 Pa</p>
-                    </div>
-                    <div class="plant-card" data-plant="alecrim" data-temp="65" data-pressure="28">
-                        <div class="plant-icon">🌿</div>
-                        <h4>Alecrim</h4>
-                        <p>Temperatura: 65°C</p>
-                        <p>Pressão: 28 Pa</p>
-                    </div>
-                    <div class="plant-card" data-plant="manjericao" data-temp="55" data-pressure="22">
-                        <div class="plant-icon">🌱</div>
-                        <h4>Manjericão</h4>
-                        <p>Temperatura: 55°C</p>
-                        <p>Pressão: 22 Pa</p>
-                    </div>
-                    <div class="plant-card" data-plant="hortela" data-temp="50" data-pressure="20">
-                        <div class="plant-icon">🌿</div>
-                        <h4>Hortelã</h4>
-                        <p>Temperatura: 50°C</p>
-                        <p>Pressão: 20 Pa</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <script src="{{ url_for('static', filename='js/biblioteca.js') }}"></script>
+    {% include 'components/novo_processo_modal.html' %}
+    <script src="{{ url_for('static', filename='js/components/alerts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/process_checker.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/novo_processo_modal.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/biblioteca.js') }}"></script>
 </body>
 </html>

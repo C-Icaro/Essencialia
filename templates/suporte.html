@@ -6,6 +6,7 @@
     <title>Essenciália - Suporte</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/suporte.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/novo_processo_modal.css') }}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
 </head>
 <body>
@@ -65,27 +66,157 @@
                 </div>
             </div>
             <div class="suporte-content">
-                <div class="suporte-box">
-                    <h2>Contato dos Desenvolvedores</h2>
-                    <div class="dev-contact">
-                        <strong>Nome:</strong> João Silva<br>
-                        <strong>E-mail:</strong> joao.silva@email.com<br>
-                        <strong>Telefone:</strong> (92) 91234-5678
+                <div class="suporte-faq-area">
+                    <h3>Falhas comuns e soluções</h3>
+                    <div class="faq-list">
+                        <div class="faq-item">
+                            <div class="faq-question">A máquina não liga <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Verifique a conexão elétrica e se há energia disponível.<br>
+                                Certifique-se de que o cabo está bem conectado.<br>
+                                Substitua o fusível, se necessário.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">Pressão acima do limite seguro <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Verifique e limpe a válvula de segurança.<br>
+                                Certifique-se de que a tubulação de saída está desobstruída.<br>
+                                Ajuste a temperatura na aplicação Essenciália.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">O óleo essencial extraído está com baixa qualidade <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Utilize matéria-prima bem seca e de boa qualidade.<br>
+                                Prolongue o tempo de extração, se necessário.<br>
+                                Ajuste a temperatura de acordo com a planta utilizada.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">O processo de extração parou antes do tempo programado <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Verifique se houve queda de energia e reinicie a máquina.<br>
+                                Confirme os alertas no painel da aplicação e ajuste os parâmetros, se necessário.<br>
+                                Certifique-se de que a extração foi configurada corretamente.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">A máquina desliga sozinha no meio do processo <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Aguarde a máquina esfriar e reinicie o processo.<br>
+                                Verifique se a bomba de resfriamento está funcionando corretamente.<br>
+                                Inspecione a rede elétrica para possíveis falhas.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">A máquina não libera vapor suficiente para a extração <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Verifique o nível de água e reabasteça se necessário.<br>
+                                Teste a resistência elétrica e substitua se estiver com defeito.<br>
+                                Inspecione e limpe a válvula de saída para garantir fluxo adequado de vapor.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">A aplicação não salva os históricos de extração <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Verifique o armazenamento disponível e libere espaço, se necessário.<br>
+                                Confirme se a aplicação tem permissão para gravar arquivos no dispositivo.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">A extração foi concluída, mas a máquina continua operando <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Verifique se o sensor está detectando corretamente o fim do processo.<br>
+                                Ajuste as configurações de desligamento automático na aplicação.<br>
+                                Reinicie a aplicação e tente novamente.
+                            </div>
+                        </div>
                     </div>
-                    <div class="dev-contact">
-                        <strong>Nome:</strong> Maria Oliveira<br>
-                        <strong>E-mail:</strong> maria.oliveira@email.com<br>
-                        <strong>Telefone:</strong> (92) 99876-5432
+                    <h3>FAQ - Perguntas frequentes</h3>
+                    <div class="faq-list">
+                        <div class="faq-item">
+                            <div class="faq-question">Quais plantas são compatíveis com o processo de extração? <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                A máquina suporta diversas plantas amazônicas como capim-limão, copaíba e andiroba. Cada planta tem um rendimento diferente e pode exigir ajustes na temperatura e no tempo de extração. A aplicação possui uma seção com informações(Biblioteca) sobre cada matéria-prima.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">Como faço a limpeza e manutenção da máquina? <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Após cada extração, esvazie o reservatório de matéria-prima e lave as partes internas com água limpa. Semanalmente, verifique e limpe os filtros e a tubulação. Para uma manutenção mais profunda, consulte o guia de limpeza na funcionalidade da aplicação.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">A aplicação precisa de internet para funcionar? <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Não. A aplicação foi desenvolvida para operar 100% offline, garantindo o monitoramento e controle da máquina sem necessidade de conexão com a internet.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">O que fazer se a máquina desligar sozinha durante a extração? <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Verifique se houve queda de energia ou superaquecimento. O sistema pode ter ativado um desligamento de segurança. Consulte os registros de falhas na aplicação para identificar o problema e reinicie a máquina.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">Como sei se a matéria-prima está bem preparada para a extração? <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                A parte da planta deve estar bem seca e cortada em pedaços para facilitar a extração. A aplicação possui um guia (Biblioteca) com recomendações para cada tipo de matéria-prima.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">A máquina pode ser utilizada para outras finalidades além da extração de óleos essenciais? <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Não. A máquina foi projetada exclusivamente para destilação a vapor de óleos essenciais e não deve ser usada para outros fins para evitar danos.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">O que acontece se a tubulação de saída estiver obstruída? <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Uma obstrução pode aumentar a pressão e causar falhas no processo. A aplicação pode detectar variações anormais e alertar o usuário para verificar e limpar a tubulação.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">Como solicitar suporte técnico? <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Na aba Suporte, você pode acessar guias de solução de problemas ou entrar em contato com a equipe técnica via e-mail ou WhatsApp.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">O que fazer se a temperatura ou pressão estiver fora dos valores recomendados? <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Se houver superaquecimento ou pressão excessiva, o sistema pode emitir um alerta. Verifique se há obstruções na tubulação, se o aquecimento da água está funcionando corretamente e se a matéria-prima foi carregada de forma adequada. Caso necessário, ajuste os parâmetros pelo software.
+                            </div>
+                        </div>
+                        <div class="faq-item">
+                            <div class="faq-question">Posso interromper o processo de extração antes do tempo programado? <span class="faq-toggle">+</span></div>
+                            <div class="faq-answer">
+                                Sim. No painel do Monitoramento, há um botão de Interromper processo, que interrompe a extração imediatamente. No entanto, recomenda-se seguir o tempo ideal para obter o máximo rendimento do óleo.
+                            </div>
+                        </div>
                     </div>
-                    <div class="dev-contact">
-                        <strong>Nome:</strong> Maria Oliveira<br>
-                        <strong>E-mail:</strong> maria.oliveira@email.com<br>
-                        <strong>Telefone:</strong> (92) 99876-5432
+                    <div class="faq-contact-box">
+                        <div class="faq-contact-icon">💬</div>
+                        <div class="faq-contact-text">
+                            <div class="faq-contact-title">Ainda com dúvidas?</div>
+                            <div class="faq-contact-subtitle">Entre em contato conosco.</div>
+                            <ul class="faq-contact-list">
+                                <li><span class="faq-contact-icon-list">✉️</span> essencialiajuda@gmail.com</li>
+                                <li><span class="faq-contact-icon-list">📱</span> (92) 91234-5678</li>
+                                <li><span class="faq-contact-icon-list">📷</span> @essencialia__</li>
+                                <li><span class="faq-contact-icon-list">📞</span> +55 (92) 99876-5432</li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
+    {% include 'components/novo_processo_modal.html' %}
+    <script src="{{ url_for('static', filename='js/components/alerts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/process_checker.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/novo_processo_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/suporte.js') }}"></script>
 </body>
 </html> 

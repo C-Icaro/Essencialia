@@ -1,0 +1,20 @@
+<!-- components/producao_modal.html -->
+<div id="producao-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+      <h2>Produção</h2>
+      <form id="producao-form">
+        <label>Volume extraído</label>
+        <div class="input-group">
+          <input type="number" name="volume_extraido" min="0" step="0.01" placeholder="Inserir volume" required class="input-volume">
+          <span class="input-suffix">g</span>
+        </div>
+  
+        <label>Notas do operador</label>
+        <textarea name="notas_operador" placeholder="Texto-exemplo" rows="3" class="input-notas"></textarea>
+  
+        <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+          <button type="submit" class="finalizar-btn">Finalizar</button>
+        </div>
+      </form>
+    </div>
+  </div>
