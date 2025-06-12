@@ -79,10 +79,7 @@ def create_process():
         
         # Calcular o tempo estimado usando a fórmula: 0.12 * massa + 20
         quantidade = float(data['quantidade'])
-        if quantidade == 1:
-            tempo_estimado = 10 / 60  # 10 segundos em minutos
-        else:
-            tempo_estimado = round(0.12 * quantidade + 20)
+        tempo_estimado = round(0.12 * quantidade + 20)
         
         # Usar UTC para start_time e finish_time
         start_dt = datetime.utcnow().replace(tzinfo=timezone.utc)
