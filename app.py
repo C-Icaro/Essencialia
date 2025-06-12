@@ -178,11 +178,11 @@ def get_processes():
         processes = []
         for row in cursor.fetchall():
             process = dict(row)
-            # Formata as datas para melhor visualização
-            if process['start_time']:
-                process['start_time'] = datetime.fromisoformat(process['start_time']).strftime('%d/%m/%Y %H:%M:%S')
-            if process['end_time']:
-                process['end_time'] = datetime.fromisoformat(process['end_time']).strftime('%d/%m/%Y %H:%M:%S')
+            # NÃO formatar as datas para exibição, apenas retornar como estão no banco (ISO)
+            # if process['start_time']:
+            #     process['start_time'] = datetime.fromisoformat(process['start_time']).strftime('%d/%m/%Y %H:%M:%S')
+            # if process['end_time']:
+            #     process['end_time'] = datetime.fromisoformat(process['end_time']).strftime('%d/%m/%Y %H:%M:%S')
             processes.append(process)
         
         conn.close()

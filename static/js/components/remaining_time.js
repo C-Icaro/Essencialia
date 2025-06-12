@@ -35,6 +35,9 @@ const RemainingTime = {
                 return;
             }
 
+            // Log para debug: mostrar o processo recebido
+            console.log('[RemainingTime] Processo recebido:', processo);
+
             this.processId = processo.id;
             this.tempoEstimado = parseInt(processo.tempo_estimado);
             this.startTime = new Date(processo.start_time); // UTC
@@ -66,7 +69,7 @@ const RemainingTime = {
         try {
             const now = new Date();
             let diff = Math.floor((this.endTime - now) / 1000);
-            
+
             // Se o tempo acabou
             if (diff <= 0) {
                 await this.handleProcessCompletion();
@@ -83,10 +86,15 @@ const RemainingTime = {
             const total = (this.endTime - this.startTime) / 1000; // total em segundos
             if (total <= 0) {
                 this.updateProgressCircle(0);
+                console.warn('Tempo total <= 0, progresso forçado para 0%');
                 return;
             }
             const elapsed = total - diff;
-            const percent = Math.max(0, Math.min(100, (elapsed / total) * 100));
+            let percent = (elapsed / total) * 100;
+            if (percent < 0) percent = 0;
+            if (percent > 100) percent = 100;
+            // Log para debug
+            console.log(`[Timer] now: ${now}, start: ${this.startTime}, end: ${this.endTime}, total: ${total}, elapsed: ${elapsed}, percent: ${percent}`);
             this.updateProgressCircle(percent);
 
         } catch (error) {
