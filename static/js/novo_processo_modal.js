@@ -13,24 +13,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Abrir modal ao clicar em qualquer botão de novo processo
-    async function abrirModalNovoProcesso(e) {
+    // Função para abrir o modal de novo processo
+    function abrirModalNovoProcesso(e) {
         if (e) e.preventDefault();
-        
         // Verifica se existe processo em andamento usando o ProcessChecker
-        const temProcessoEmAndamento = await processChecker.hasActiveProcess();
-        if (temProcessoEmAndamento) {
-            return; // Não abre o modal se houver processo em andamento
+        if (window.ProcessChecker && window.ProcessChecker.state && window.ProcessChecker.state.currentProcess) {
+            // Se já existe processo em andamento, não abre o modal
+            window.alerts && window.alerts.add('Já existe um processo em andamento. Finalize antes de iniciar outro.', 'error');
+            return;
         }
-        
         document.getElementById('novo-processo-modal').style.display = 'block';
     }
 
-    // Para todos os botões com a classe .new-process-btn
-    document.querySelectorAll('.new-process-btn').forEach(btn => {
-        btn.removeEventListener('click', abrirModalNovoProcesso); // previne duplicidade
-        btn.addEventListener('click', abrirModalNovoProcesso);
-    });
+    // Ao carregar a página, associa o evento a todos os botões/cards .new-process-btn
+    function setupNovoProcessoBtns() {
+        document.querySelectorAll('.new-process-btn').forEach(btn => {
+            btn.removeEventListener('click', abrirModalNovoProcesso);
+            btn.addEventListener('click', abrirModalNovoProcesso);
+        });
+    }
+
+    setupNovoProcessoBtns();
 
     // Para o card amarelo (caso não tenha a classe new-process-btn)
     const homeCardYellow = document.querySelector('.home-card.yellow');
