@@ -316,6 +316,18 @@ def process_active():
         'process': dict(processo) if processo else None
     })
 
+@app.route('/api/process/<int:process_id>', methods=['DELETE'])
+def delete_process(process_id):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM process WHERE id = ?', (process_id,))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True, 'message': 'Processo excluído com sucesso'})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 from routes import *
 
 if __name__ == "__main__":

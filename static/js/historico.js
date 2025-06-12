@@ -104,7 +104,9 @@ async function atualizarPainel(idx) {
   document.getElementById('solucao-falha').textContent = '-';
   // Linha 3
   document.getElementById('volume-extraido').textContent = `${safe(extracao.volume_extraido, 0)} g`;
-  document.getElementById('rendimento').textContent = `${safe(extracao.rendimento, 0)} %`;
+  let rendimento = safe(extracao.rendimento, 0);
+  if (!isNaN(rendimento) && rendimento !== '-') rendimento = parseFloat(rendimento).toFixed(2);
+  document.getElementById('rendimento').textContent = `${rendimento} %`;
   const obsEl = document.getElementById('notas-operador');
   obsEl.textContent = safe(extracao.notas_operador);
   obsEl.classList.add('historico-observacao-menor');
@@ -188,8 +190,8 @@ function atualizarGraficoBarra(canvasId, data, label) {
     else baixo++;
   });
   const total = alto + baixo;
-  const percAlto = total ? Math.round((alto / total) * 100) : 0;
-  const percBaixo = total ? Math.round((baixo / total) * 100) : 0;
+  const percAlto = total ? ((alto / total) * 100).toFixed(2) : '0.00';
+  const percBaixo = total ? ((baixo / total) * 100).toFixed(2) : '0.00';
   window[canvasId] = new Chart(ctx, {
     type: 'doughnut',
     data: {
@@ -227,5 +229,33 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   document.getElementById('extracao-select').addEventListener('change', function() {
     atualizarPainel(this.value);
+  });
+
+  // Botão de excluir extração
+  const btnExcluir = document.getElementById('btn-excluir-extracao');
+  btnExcluir.addEventListener('click', async function() {
+    const idx = document.getElementById('extracao-select').value;
+    const extracao = extracoes[idx];
+    if (!extracao || !extracao.id) return;
+    if (!confirm('Tem certeza que deseja excluir esta extração?')) return;
+    try {
+      const resp = await fetch(`/api/process/${extracao.id}`, { method: 'DELETE' });
+      const data = await resp.json();
+      if (data.success) {
+        window.alerts && window.alerts.add('success', 'Extração excluída com sucesso!', null, true);
+        // Atualiza a lista
+        await fetchExtracoes();
+        preencherDropdown();
+        if (extracoes.length > 0) {
+          atualizarPainel(0);
+        } else {
+          window.location.reload();
+        }
+      } else {
+        window.alerts && window.alerts.add('error', data.error || 'Erro ao excluir extração.');
+      }
+    } catch (e) {
+      window.alerts && window.alerts.add('error', 'Erro ao excluir extração.');
+    }
   });
 });
