@@ -110,84 +110,14 @@ def recreate_alerts_table():
     
     conn.close()
 
-def recreate_process_table():
-    conn = sqlite3.connect(DB_FILE)
-    cursor = conn.cursor()
-    
-    # Verificar se a tabela existe
-    cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='process'")
-    if cursor.fetchone():
-        # Criar tabela temporária com a nova estrutura
-        cursor.execute("""
-            CREATE TABLE process_new (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                plant_id INTEGER,
-                start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-                end_time DATETIME,
-                operator TEXT,
-                quantidade_materia_prima REAL,
-                parte_utilizada TEXT,
-                temp_min REAL,
-                temp_max REAL,
-                volume_extraido REAL,
-                rendimento REAL,
-                notas_operador TEXT,
-                tempo_estimado INTEGER,  -- Novo campo: tempo estimado em minutos
-                status TEXT DEFAULT 'em andamento',
-                FOREIGN KEY (plant_id) REFERENCES plant(id)
-            )
-        """)
-        
-        # Copiar dados existentes
-        cursor.execute("""
-            INSERT INTO process_new (
-                id, plant_id, start_time, end_time, operator, status
-            )
-            SELECT 
-                id, plant_id, start_time, end_time, operator, 
-                CASE 
-                    WHEN end_time IS NULL THEN 'em andamento'
-                    ELSE 'finalizado'
-                END as status
-            FROM process
-        """)
-        
-        # Remover tabela antiga e renomear a nova
-        cursor.execute("DROP TABLE process")
-        cursor.execute("ALTER TABLE process_new RENAME TO process")
-        
-        conn.commit()
-        print("Estrutura da tabela process atualizada com sucesso!")
-    else:
-        # Se a tabela não existir, criar com a nova estrutura
-        cursor.execute("""
-            CREATE TABLE process (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                plant_id INTEGER,
-                start_time DATETIME DEFAULT CURRENT_TIMESTAMP,
-                end_time DATETIME,
-                operator TEXT,
-                quantidade_materia_prima REAL,
-                parte_utilizada TEXT,
-                temp_min REAL,
-                temp_max REAL,
-                volume_extraido REAL,
-                rendimento REAL,
-                notas_operador TEXT,
-                tempo_estimado INTEGER,  -- Novo campo: tempo estimado em minutos
-                status TEXT DEFAULT 'em andamento',
-                FOREIGN KEY (plant_id) REFERENCES plant(id)
-            )
-        """)
-        conn.commit()
-        print("Tabela process criada com sucesso!")
-    
-    conn.close()
+# ATENÇÃO: Nunca chame recreate_process_table automaticamente!
+# Use apenas manualmente, com backup, e ajuste o SELECT para copiar todos os campos se necessário.
+# def recreate_process_table():
+#     ...
 
 # Inicializar banco de dados e atualizar estrutura se necessário
 init_db()
 recreate_alerts_table()
-recreate_process_table()
 
 def save_temperature_to_db(temperature):
     conn = sqlite3.connect(DB_FILE)
