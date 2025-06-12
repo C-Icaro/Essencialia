@@ -139,5 +139,69 @@ A aplicação estará disponível em `http://localhost:5000`
 
 ---
 
+## Rotas Importantes da API
+
+### 1. Processo de Extração
+
+#### `POST /api/process`
+Cria um novo processo de extração. Recebe dados como planta, operador, quantidade de matéria-prima, parte utilizada, temperatura mínima/máxima, etc. Garante que não exista outro processo em andamento antes de criar um novo. Armazena o processo na tabela `process`.
+
+- **Exemplo de payload:**
+```json
+{
+  "planta": "Capim-limão",
+  "operator": "João",
+  "quantidade": 2.5,
+  "parte": "folha",
+  "temp_min": 80,
+  "temp_max": 100
+}
+```
+- **Resposta:**
+  - Sucesso: `{ "success": true, "process_id": 1, "message": "Processo iniciado com sucesso" }`
+  - Erro: `{ "success": false, "error": "Mensagem de erro" }`
+
+#### `GET /api/process`
+Retorna a lista de todos os processos de extração cadastrados, incluindo informações da planta, operador, tempos, status, etc.
+
+- **Resposta:**
+  - Sucesso: `{ "success": true, "processes": [ ... ] }`
+
+### 2. Dados de Temperatura
+
+#### `GET /temperature-data`
+Retorna os dados históricos de temperatura registrados pelos sensores durante os processos de extração.
+
+- **Parâmetros opcionais:**
+  - `process_id`: filtra os dados para um processo específico.
+- **Resposta:**
+```json
+{
+  "timestamps": ["2024-06-01T12:00:00-04:00", ...],
+  "temperatures": [85.2, ...]
+}
+```
+- **Armazena:**
+  - Tabela `sensor_data` (tipo `temperature`)
+
+### 3. Dados de Pressão
+
+#### `GET /pressure-data`
+Retorna os dados históricos de pressão registrados pelos sensores durante os processos de extração.
+
+- **Parâmetros opcionais:**
+  - `process_id`: filtra os dados para um processo específico.
+- **Resposta:**
+```json
+{
+  "timestamps": ["2024-06-01T12:00:00-04:00", ...],
+  "pressures": [1.2, ...]
+}
+```
+- **Armazena:**
+  - Tabela `sensor_data` (tipo `pressure`)
+
+---
+
 Se quiser um diagrama, fluxograma, ou detalhamento de alguma parte específica, consulte a documentação ou entre em contato com os desenvolvedores.
  
