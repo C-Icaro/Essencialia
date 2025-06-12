@@ -37,8 +37,8 @@ const ProcessChecker = {
                     
                     if (window.alerts) {
                         await window.alerts.add(
-                            `Já existe um processo em andamento: ${processoEmAndamento.planta} (${processoEmAndamento.quantidade_materia_prima}g)`,
-                            'error',
+                            'Já existe um processo em andamento.\n\nFinalize o processo atual antes de iniciar um novo.\nAcesse o Dashboard para acompanhar ou finalizar o processo em andamento.',
+                            'warning',
                             null,
                             true
                         );
@@ -54,7 +54,7 @@ const ProcessChecker = {
             
             if (window.alerts) {
                 await window.alerts.add(
-                    'Erro ao verificar processo em andamento. Por favor, tente novamente.',
+                    'Ocorreu um erro ao verificar o processo em andamento. Por favor, tente novamente ou recarregue a página.',
                     'error',
                     null,
                     true

@@ -181,25 +181,41 @@ function atualizarGraficoBarra(canvasId, data, label) {
   if (window[canvasId] && typeof window[canvasId].destroy === 'function') {
     window[canvasId].destroy();
   }
+  // Calcular % alto e baixo
+  let alto = 0, baixo = 0;
+  data.forEach(v => {
+    if (parseFloat(v) >= 0.5) alto++;
+    else baixo++;
+  });
+  const total = alto + baixo;
+  const percAlto = total ? Math.round((alto / total) * 100) : 0;
+  const percBaixo = total ? Math.round((baixo / total) * 100) : 0;
   window[canvasId] = new Chart(ctx, {
-    type: 'bar',
+    type: 'doughnut',
     data: {
-      labels: data.map((_, i) => `${i + 1}`),
+      labels: ['Nível Alto', 'Nível Baixo'],
       datasets: [{
-        label: label,
-        data: data,
-        backgroundColor: '#6ee7b7',
-        borderRadius: 8
+        data: [alto, baixo],
+        backgroundColor: ['#34d399', '#60a5fa'],
+        borderWidth: 2
       }]
     },
     options: {
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false } },
-        y: { beginAtZero: true, grid: { color: '#eee' } }
-      }
+      plugins: { legend: { display: true, position: 'bottom' } },
+      cutout: '65%',
+      responsive: true,
+      maintainAspectRatio: false
     }
   });
+  // Exibir texto com percentuais abaixo do gráfico
+  let info = document.getElementById(canvasId + '-info');
+  if (!info) {
+    info = document.createElement('div');
+    info.id = canvasId + '-info';
+    info.style = 'text-align:center; font-size:0.98em; margin-top:6px; color:#333;';
+    ctx.canvas.parentNode.appendChild(info);
+  }
+  info.innerHTML = `<b>${percAlto}%</b> do tempo em <span style='color:#34d399'>nível alto</span> &nbsp; | &nbsp; <b>${percBaixo}%</b> do tempo em <span style='color:#60a5fa'>nível baixo</span>`;
 }
 
 // --- Inicialização ---

@@ -19,7 +19,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Verifica se existe processo em andamento usando o ProcessChecker
         if (window.ProcessChecker && window.ProcessChecker.state && window.ProcessChecker.state.currentProcess) {
             // Se já existe processo em andamento, não abre o modal
-            window.alerts && window.alerts.add('Já existe um processo em andamento. Finalize antes de iniciar outro.', 'error');
+            window.alerts && window.alerts.add(
+                'Já existe um processo em andamento.\n\nFinalize o processo atual antes de iniciar um novo.\nAcesse o Dashboard para acompanhar ou finalizar o processo em andamento.',
+                'warning',
+                null,
+                true
+            );
             return;
         }
         document.getElementById('novo-processo-modal').style.display = 'block';

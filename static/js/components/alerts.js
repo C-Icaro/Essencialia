@@ -205,6 +205,13 @@ const AlertSystem = {
         const alertList = document.querySelector('.alert-list');
         if (!alertList) return;
 
+        // Substitui mensagens genéricas por textos amigáveis
+        if (message === 'warning') {
+            message = 'Atenção: verifique as informações do processo ou sensores.';
+        } else if (message === 'error') {
+            message = 'Ocorreu um erro inesperado. Por favor, tente novamente ou recarregue a página.';
+        }
+
         const alertData = {
             type,
             message,
