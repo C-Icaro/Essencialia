@@ -203,6 +203,14 @@ def save_pressure_to_db(pressure):
     conn.commit()
     conn.close()
 
+def get_current_process_id():
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    cursor.execute("SELECT id FROM process WHERE status = 'em andamento'")
+    row = cursor.fetchone()
+    conn.close()
+    return row[0] if row else None
+
 # Funções MQTT
 def on_connect(client, userdata, flags, rc):
     print("Conectado ao broker MQTT")
@@ -254,14 +262,36 @@ def on_message(client, userdata, msg):
         mqtt_data["nivel"] = payload.get("nivel", "N/A")
         mqtt_data["pressao_kPa"] = f"{payload.get('pressao_kPa', 'N/A')} kPa"
 
-        # Salvar temperatura e pressão no banco de dados
+        # Buscar o process_id do processo em andamento
+        process_id = get_current_process_id()
+
+        # Salvar temperatura, pressão e nível de água no banco de dados, referenciando o processo
         conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO sensor_data (process_id, sensor_type, value) VALUES (?, ?, ?)", (None, 'temperature', payload.get("temperatura", 0)))
-        cursor.execute("INSERT INTO sensor_data (process_id, sensor_type, value) VALUES (?, ?, ?)", (None, 'pressure', payload.get("pressao_kPa", 0)))
+        cursor.execute("INSERT INTO sensor_data (process_id, sensor_type, value) VALUES (?, ?, ?)", (process_id, 'temperature', payload.get("temperatura", 0)))
+        cursor.execute("INSERT INTO sensor_data (process_id, sensor_type, value) VALUES (?, ?, ?)", (process_id, 'pressure', payload.get("pressao_kPa", 0)))
+        # Nível de água: converter para valor numérico se possível
+        nivel = payload.get("nivel", None)
+        if nivel is not None:
+            if isinstance(nivel, (int, float)):
+                nivel_val = float(nivel)
+            elif isinstance(nivel, str):
+                if nivel.upper() == "ALTO":
+                    nivel_val = 1.0
+                elif nivel.upper() == "BAIXO":
+                    nivel_val = 0.0
+                else:
+                    try:
+                        nivel_val = float(nivel)
+                    except Exception:
+                        nivel_val = None
+            else:
+                nivel_val = None
+            if nivel_val is not None:
+                cursor.execute("INSERT INTO sensor_data (process_id, sensor_type, value) VALUES (?, ?, ?)", (process_id, 'water_level', nivel_val))
         conn.commit()
         conn.close()
-        print(f"Dados salvos: temperatura={payload.get('temperatura', 0)}, pressao={payload.get('pressao_kPa', 0)}")
+        print(f"Dados salvos: temperatura={payload.get('temperatura', 0)}, pressao={payload.get('pressao_kPa', 0)}, nivel={nivel}")
     except Exception as e:
         print(f"Erro ao processar mensagem MQTT: {e}")
 

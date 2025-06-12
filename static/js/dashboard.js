@@ -579,8 +579,32 @@ function updateProcessTimesOnDashboard(processo) {
     }
 }
 
+async function checkProcessActiveAndToggleUI() {
+    try {
+        const resp = await fetch('/api/process');
+        const data = await resp.json();
+        const processoAtivo = data.processes && data.processes.find(p => p.status === 'em andamento');
+        const processSection = document.getElementById('process-active-section');
+        const noProcessSection = document.getElementById('no-process-section');
+        if (processoAtivo) {
+            if (processSection) processSection.style.display = '';
+            if (noProcessSection) noProcessSection.style.display = 'none';
+        } else {
+            if (processSection) processSection.style.display = 'none';
+            if (noProcessSection) noProcessSection.style.display = '';
+        }
+    } catch (e) {
+        // Em caso de erro, esconde tudo
+        const processSection = document.getElementById('process-active-section');
+        const noProcessSection = document.getElementById('no-process-section');
+        if (processSection) processSection.style.display = 'none';
+        if (noProcessSection) noProcessSection.style.display = '';
+    }
+}
+
 // Inicialização da aplicação
 document.addEventListener('DOMContentLoaded', async () => {
+    await checkProcessActiveAndToggleUI();
     // Buscar processo em andamento ao carregar a página
     try {
         const resp = await fetch('/api/process/active');
@@ -602,6 +626,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const processChecker = window.ProcessChecker.init();
     const uiUpdater = window.UIUpdater.init();
     const remainingTime = await window.RemainingTime.init('.time-display');
+
+    // Atualiza informações do processo em andamento ao carregar
+    if (uiUpdater) uiUpdater.updateCurrentProcess();
 
     // Inicializa os gráficos
     charts.init();
@@ -634,20 +661,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.querySelector('.part-used').textContent = part_used;
         document.querySelector('.estimated-duration').textContent = `${tempo_estimado} minutos`;
 
+        // Garante atualização dos campos a partir do backend
+        if (uiUpdater) await uiUpdater.updateCurrentProcess();
+
         // Reinicia o contador com o tempo estimado (delay para garantir atualização do backend)
         if (remainingTime) {
             setTimeout(() => remainingTime.start(), 700);
         }
+        await checkProcessActiveAndToggleUI();
     });
 
     // Evento de conclusão do processo
-    window.addEventListener('countdownComplete', () => {
+    window.addEventListener('countdownComplete', async () => {
         // Mostra alerta de sucesso
         window.alerts.add('Processo concluído com sucesso!', 'success');
         
         // Abre o modal de produção
         const producaoModal = document.getElementById('producao-modal');
         if (producaoModal) producaoModal.style.display = 'block';
+        await checkProcessActiveAndToggleUI();
     });
 
     // Evento de visibilidade da página
