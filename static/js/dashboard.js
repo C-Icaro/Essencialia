@@ -106,6 +106,12 @@ const utils = {
             clearTimeout(id);
             throw error;
         }
+    },
+
+    async getCurrentProcess() {
+        const resp = await fetch('/api/process/active');
+        const data = await resp.json();
+        return data.active && data.process ? data.process : null;
     }
 };
 
@@ -572,8 +578,11 @@ function setupCancelProcessButton() {
             const result = await response.json();
             if (result.success) {
                 alert('Processo cancelado com sucesso!');
-                window.currentProcessId = null;
-                window.location.reload();
+                // Abrir o modal de produção para preenchimento dos dados finais
+                const producaoModal = document.getElementById('producao-modal');
+                if (producaoModal) producaoModal.style.display = 'block';
+                // window.currentProcessId = null; // Remover reload automático para permitir preenchimento do modal
+                // window.location.reload();
             } else {
                 throw new Error(result.error || 'Erro ao cancelar processo');
             }
@@ -735,24 +744,8 @@ window.updateWaterLevel = function(waterLevel) {
 document.addEventListener('DOMContentLoaded', function() {
     const producaoForm = document.getElementById('producao-form');
     const volumeInput = document.querySelector('input[name="volume_extraido"]');
-    const rendimentoInput = document.getElementById('rendimento-extracao');
-    const quantidadeOriginal = document.querySelector('.material-input')?.value;
 
-    if (producaoForm && volumeInput && rendimentoInput) {
-        // Calcular rendimento quando o volume é alterado
-        volumeInput.addEventListener('input', function() {
-            const volume = parseFloat(this.value) || 0;
-            const quantidade = parseFloat(quantidadeOriginal?.match(/(\d+)/)?.[1] || 0);
-            
-            if (quantidade > 0) {
-                const rendimento = (volume / quantidade) * 100;
-                rendimentoInput.value = rendimento.toFixed(2) + '%';
-            } else {
-                rendimentoInput.value = '';
-            }
-        });
-
-        // Handler para submissão do formulário
+    if (producaoForm && volumeInput) {
         producaoForm.addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -762,9 +755,27 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             try {
+                // Obter volume extraído
+                const volumeExtraido = parseFloat(volumeInput.value);
+                // Buscar quantidade de matéria-prima do processo ativo
+                let quantidadeMateriaPrima = 0;
+                try {
+                    const resp = await fetch('/api/process/active');
+                    const data = await resp.json();
+                    if (data && data.process && data.process.quantidade_materia_prima) {
+                        quantidadeMateriaPrima = parseFloat(data.process.quantidade_materia_prima);
+                    }
+                } catch (e) {
+                    quantidadeMateriaPrima = 0;
+                }
+                // Calcular rendimento
+                let rendimento = 0;
+                if (quantidadeMateriaPrima > 0) {
+                    rendimento = (volumeExtraido / quantidadeMateriaPrima) * 100;
+                }
                 const formData = {
-                    volume_extraido: parseFloat(volumeInput.value),
-                    rendimento: parseFloat(rendimentoInput.value),
+                    volume_extraido: volumeExtraido,
+                    rendimento: rendimento,
                     notas_operador: document.querySelector('textarea[name="notas_operador"]').value
                 };
 
@@ -781,9 +792,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (result.success) {
                     document.getElementById('producao-modal').style.display = 'none';
                     alert('Processo finalizado com sucesso!');
-                    // Limpar o ID do processo atual
                     window.currentProcessId = null;
-                    // Recarregar a página para atualizar o estado
                     window.location.reload();
                 } else {
                     throw new Error(result.error || 'Erro ao finalizar processo');

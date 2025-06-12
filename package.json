@@ -6,7 +6,8 @@
   "scripts": {
     "start": "python app.py",
     "dev": "flask run --debug",
-    "test": "pytest"
+    "test": "pytest",
+    "migrations": "python migrate.py"
   },
   "dependencies": {
     "bootstrap": "^5.3.2",

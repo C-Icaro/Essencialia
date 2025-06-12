@@ -89,6 +89,16 @@ pip install -r requirements.txt
 npm install
 ```
 
+### Migração do Banco de Dados
+
+Antes de executar a aplicação pela primeira vez (ou após atualizações de estrutura do banco), execute as migrações para garantir que todas as colunas e tabelas estejam atualizadas:
+
+```bash
+npm run migrations
+```
+
+Esse comando executa o script de migração que cria/atualiza as colunas necessárias no banco de dados (por exemplo, a coluna `eficiencia` na tabela `process`).
+
 ### Executando a Aplicação
 
 1. Inicie o servidor Flask:

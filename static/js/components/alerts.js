@@ -121,7 +121,7 @@ const AlertSystem = {
                     </div>
                     <div class="detail-item">
                         <span class="detail-label">Tempo estimado:</span>
-                        <span class="detail-value">${data.tempoEstimado} minutos</span>
+                        <span class="detail-value">${data.tempoEstimado ? data.tempoEstimado : 0} minutos</span>
                     </div>
                 </div>`,
             temperature: `

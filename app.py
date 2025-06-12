@@ -128,8 +128,41 @@ def finish_process(process_id):
         data = request.json
         conn = get_db_connection()
         cursor = conn.cursor()
-        
-        # Update process with final data
+
+        # Verificar status atual do processo
+        cursor.execute('SELECT status, quantidade_materia_prima FROM process WHERE id = ?', (process_id,))
+        row_status = cursor.fetchone()
+        status_atual = row_status['status'] if row_status else None
+        quantidade_materia_prima = float(row_status['quantidade_materia_prima']) if row_status and row_status['quantidade_materia_prima'] else 0
+
+        # Obter volume extraído enviado pelo frontend
+        volume_extraido = float(data.get('volume_extraido') or 0)
+        # Calcular rendimento
+        rendimento = (volume_extraido / quantidade_materia_prima) * 100 if quantidade_materia_prima > 0 else 0
+        # Definir nota padrão se não enviada
+        notas_operador = data.get('notas_operador', '').strip()
+        if not notas_operador:
+            notas_operador = 'Processo finalizado sem notas adicionais'
+
+        if status_atual == 'finalizado':
+            # Permitir atualizar apenas volume_extraido, rendimento e notas_operador
+            cursor.execute('''
+                UPDATE process 
+                SET volume_extraido = ?,
+                    rendimento = ?,
+                    notas_operador = ?
+                WHERE id = ?
+            ''', (
+                volume_extraido,
+                rendimento,
+                notas_operador,
+                process_id
+            ))
+            conn.commit()
+            conn.close()
+            return jsonify({'success': True, 'message': 'Produção registrada após finalização automática'})
+
+        # Update process with final data (finalização normal)
         cursor.execute('''
             UPDATE process 
             SET end_time = CURRENT_TIMESTAMP,
@@ -139,9 +172,9 @@ def finish_process(process_id):
                 status = 'finalizado'
             WHERE id = ?
         ''', (
-            float(data.get('volume_extraido') or 0),
-            float(data.get('rendimento') or 0),
-            data.get('notas_operador', ''),
+            volume_extraido,
+            rendimento,
+            notas_operador,
             process_id
         ))
         
@@ -272,7 +305,7 @@ def process_active():
                     cursor.execute('''
                         UPDATE process SET end_time = ?, status = 'finalizado', notas_operador = ?
                         WHERE id = ?
-                    ''', (now.isoformat(sep=' '), 'Finalizado automaticamente por tempo excedido', processo['id']))
+                    ''', (now.isoformat(sep=' '), 'Processo finalizado sem notas adicionais', processo['id']))
                     conn.commit()
                     conn.close()
                     return jsonify({'active': False, 'process': None, 'auto_finished': True})
