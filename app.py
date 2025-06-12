@@ -163,15 +163,17 @@ def finish_process(process_id):
             return jsonify({'success': True, 'message': 'Produção registrada após finalização automática'})
 
         # Update process with final data (finalização normal)
+        end_time = datetime.utcnow().replace(tzinfo=timezone.utc).isoformat()
         cursor.execute('''
             UPDATE process 
-            SET end_time = CURRENT_TIMESTAMP,
+            SET end_time = ?,
                 volume_extraido = ?,
                 rendimento = ?,
                 notas_operador = ?,
                 status = 'finalizado'
             WHERE id = ?
         ''', (
+            end_time,
             volume_extraido,
             rendimento,
             notas_operador,
@@ -296,7 +298,7 @@ def process_active():
             else:
                 start_dt = processo['start_time']
             if start_dt:
-                now = datetime.now(timezone.utc)
+                now = datetime.utcnow().replace(tzinfo=timezone.utc)
                 diff_minutes = (now - start_dt).total_seconds() / 60
                 if diff_minutes > processo['tempo_estimado']:
                     # Finaliza o processo automaticamente
@@ -305,7 +307,7 @@ def process_active():
                     cursor.execute('''
                         UPDATE process SET end_time = ?, status = 'finalizado', notas_operador = ?
                         WHERE id = ?
-                    ''', (now.isoformat(sep=' '), 'Processo finalizado sem notas adicionais', processo['id']))
+                    ''', (now.isoformat(), 'Processo finalizado sem notas adicionais', processo['id']))
                     conn.commit()
                     conn.close()
                     return jsonify({'active': False, 'process': None, 'auto_finished': True})
