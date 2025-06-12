@@ -55,6 +55,70 @@ A aplicação Essenciália permite acompanhar e controlar processos de extraçã
 
 ---
 
+## Execução Local
+
+### Pré-requisitos
+- Python 3.8 ou superior
+- Node.js 18.0 ou superior
+- npm (Node Package Manager)
+
+### Configuração do Ambiente
+
+1. Clone o repositório:
+```bash
+git clone [URL_DO_REPOSITÓRIO]
+cd Essencialia
+```
+
+2. Configure o ambiente Python:
+```bash
+# Crie e ative um ambiente virtual (recomendado)
+python -m venv venv
+# No Windows:
+.\venv\Scripts\activate
+# No Linux/Mac:
+source venv/bin/activate
+
+# Instale as dependências Python
+pip install -r requirements.txt
+```
+
+3. Configure o ambiente Node.js:
+```bash
+# Instale as dependências do frontend
+npm install
+```
+
+### Executando a Aplicação
+
+1. Inicie o servidor Flask:
+```bash
+# Usando npm
+npm start
+
+# Ou diretamente com Python
+python app.py
+```
+
+2. Para desenvolvimento, você pode usar o modo debug:
+```bash
+npm run dev
+```
+
+3. Para executar os testes:
+```bash
+npm test
+```
+
+A aplicação estará disponível em `http://localhost:5000`
+
+### Notas Importantes
+- Certifique-se de que todas as dependências estão instaladas corretamente
+- O banco de dados SQLite será criado automaticamente na primeira execução
+- Para simulação de dados MQTT, o sistema possui um simulador integrado
+
+---
+
 ## Resumo das Páginas
 
 - **Home**: Navegação e boas-vindas
