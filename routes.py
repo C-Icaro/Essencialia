@@ -1,5 +1,5 @@
 from app import app  # Importando o objeto app do arquivo app.py
-from flask import render_template, jsonify  # Importando render_template e jsonify
+from flask import render_template, jsonify, request  # Importando render_template, jsonify e request
 from mqtt.mqtt_handler import mqtt_data  # Importando mqtt_data
 import sqlite3  # Importando sqlite3
 from datetime import datetime, timedelta
@@ -47,13 +47,15 @@ def get_mqtt_data():
 
 @app.route("/temperature-data")
 def get_temperature_data():
+    process_id = request.args.get('process_id')
     conn = sqlite3.connect("data.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT timestamp, value FROM sensor_data WHERE sensor_type = 'temperature' ORDER BY timestamp ASC")
+    if process_id:
+        cursor.execute("SELECT timestamp, value FROM sensor_data WHERE sensor_type = 'temperature' AND process_id = ? ORDER BY timestamp ASC", (process_id,))
+    else:
+        cursor.execute("SELECT timestamp, value FROM sensor_data WHERE sensor_type = 'temperature' ORDER BY timestamp ASC")
     rows = cursor.fetchall()
     conn.close()
-
-    # Formatar os dados para o gráfico, convertendo timestamps
     data = {
         "timestamps": [convert_to_manaus_time(row[0]) for row in rows],
         "temperatures": [row[1] for row in rows]
@@ -62,16 +64,35 @@ def get_temperature_data():
 
 @app.route("/pressure-data")
 def get_pressure_data():
+    process_id = request.args.get('process_id')
     conn = sqlite3.connect("data.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT timestamp, value FROM sensor_data WHERE sensor_type = 'pressure' ORDER BY timestamp ASC")
+    if process_id:
+        cursor.execute("SELECT timestamp, value FROM sensor_data WHERE sensor_type = 'pressure' AND process_id = ? ORDER BY timestamp ASC", (process_id,))
+    else:
+        cursor.execute("SELECT timestamp, value FROM sensor_data WHERE sensor_type = 'pressure' ORDER BY timestamp ASC")
     rows = cursor.fetchall()
     conn.close()
-    
-    # Formatar os dados para o gráfico, convertendo timestamps
     data = {
         "timestamps": [convert_to_manaus_time(row[0]) for row in rows],
         "pressures": [row[1] for row in rows]
+    }
+    return jsonify(data)
+
+@app.route("/water-level-data")
+def get_water_level_data():
+    process_id = request.args.get('process_id')
+    conn = sqlite3.connect("data.db")
+    cursor = conn.cursor()
+    if process_id:
+        cursor.execute("SELECT timestamp, value FROM sensor_data WHERE sensor_type = 'water_level' AND process_id = ? ORDER BY timestamp ASC", (process_id,))
+    else:
+        cursor.execute("SELECT timestamp, value FROM sensor_data WHERE sensor_type = 'water_level' ORDER BY timestamp ASC")
+    rows = cursor.fetchall()
+    conn.close()
+    data = {
+        "timestamps": [convert_to_manaus_time(row[0]) for row in rows],
+        "water_levels": [row[1] for row in rows]
     }
     return jsonify(data)
 

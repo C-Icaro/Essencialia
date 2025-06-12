@@ -261,27 +261,57 @@ const charts = {
         });
     },
 
+    async updateWaterLevelChart() {
+        try {
+            const processId = window.currentProcessId;
+            const url = processId ? `/water-level-data?process_id=${processId}` : '/water-level-data';
+            const response = await utils.fetchWithTimeout(url);
+            const data = await response.json();
+            if (!data.timestamps || !data.water_levels) {
+                throw new Error('Dados de nível de água inválidos');
+            }
+            // Aqui você pode atualizar um gráfico de nível de água, se houver
+            // Exemplo: atualizar um gráfico Chart.js ou exibir o último valor
+            // Exemplo de uso futuro:
+            // const chartData = data.timestamps.map((timestamp, index) => ({
+            //     x: new Date(timestamp).getTime(),
+            //     y: parseFloat(data.water_levels[index])
+            // }));
+            // if (state.charts.waterLevel) {
+            //     state.charts.waterLevel.data.datasets[0].data = chartData;
+            //     state.charts.waterLevel.update('none');
+            // }
+            // Atualizar o display do nível de água atual
+            if (data.water_levels.length > 0) {
+                const lastLevel = data.water_levels[data.water_levels.length - 1];
+                window.updateWaterLevel(lastLevel * 100); // Supondo que 1.0 = 100%
+            }
+        } catch (error) {
+            console.error('Erro ao atualizar dados de nível de água:', error);
+        }
+    },
+
     async update() {
         await Promise.all([
             this.updateTemperatureChart(),
-            this.updatePressureChart()
+            this.updatePressureChart(),
+            this.updateWaterLevelChart()
         ]);
     },
 
     async updateTemperatureChart() {
         try {
-            const response = await utils.fetchWithTimeout('/temperature-data');
+            const processId = window.currentProcessId;
+            const url = processId ? `/temperature-data?process_id=${processId}` : '/temperature-data';
+            const response = await utils.fetchWithTimeout(url);
             const data = await response.json();
-            
             if (!data.timestamps || !data.temperatures) {
                 throw new Error('Dados de temperatura inválidos');
             }
-            
             const chartData = data.timestamps.map((timestamp, index) => ({
                 x: new Date(timestamp).getTime(),
                 y: parseFloat(data.temperatures[index])
             }));
-            
             if (state.charts.temperature) {
                 state.charts.temperature.data.datasets[0].data = chartData;
                 state.charts.temperature.update('none');
@@ -293,18 +323,17 @@ const charts = {
 
     async updatePressureChart() {
         try {
-            const response = await utils.fetchWithTimeout('/pressure-data');
+            const processId = window.currentProcessId;
+            const url = processId ? `/pressure-data?process_id=${processId}` : '/pressure-data';
+            const response = await utils.fetchWithTimeout(url);
             const data = await response.json();
-            
             if (!data.timestamps || !data.pressures) {
                 throw new Error('Dados de pressão inválidos');
             }
-            
             const chartData = data.timestamps.map((timestamp, index) => ({
                 x: new Date(timestamp).getTime(),
                 y: parseFloat(data.pressures[index])
             }));
-            
             if (state.charts.pressure) {
                 state.charts.pressure.data.datasets[0].data = chartData;
                 state.charts.pressure.update('none');
@@ -652,23 +681,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     realtime.update();
 
     // Evento de novo processo iniciado
-    window.addEventListener('novoProcessoIniciado', async (event) => {
-        const { process_id, plant_name, material_input, part_used, tempo_estimado } = event.detail;
-        
-        // Atualiza informações do processo
-        document.querySelector('.plant-name').textContent = plant_name;
-        document.querySelector('.material-input').textContent = material_input;
-        document.querySelector('.part-used').textContent = part_used;
-        document.querySelector('.estimated-duration').textContent = `${tempo_estimado} minutos`;
-
-        // Garante atualização dos campos a partir do backend
-        if (uiUpdater) await uiUpdater.updateCurrentProcess();
-
-        // Reinicia o contador com o tempo estimado (delay para garantir atualização do backend)
-        if (remainingTime) {
-            setTimeout(() => remainingTime.start(), 700);
-        }
+    window.addEventListener('novoProcessoIniciado', async () => {
         await checkProcessActiveAndToggleUI();
+        window.location.reload(); // Recarrega a página após novo processo
     });
 
     // Evento de conclusão do processo
