@@ -4,7 +4,7 @@
   "description": "Sistema de monitoramento e controle de processos de extração de óleos essenciais",
   "main": "app.py",
   "scripts": {
-    "start": "python app.py",
+    "start": "echo '🚀 Iniciando servidor Essencialia...' && python app.py",
     "dev": "flask run --debug",
     "test": "pytest",
     "migrations": "python migrate.py"
