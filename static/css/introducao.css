@@ -170,3 +170,127 @@ section{
     }
 }
 
+/* Responsividade para telas menores */
+@media (max-width: 900px) {
+    header img {
+        width: 180px;
+        height: 54px;
+    }
+    section .list .item .content {
+        width: 90%;
+        left: 0;
+        top: 18%;
+        gap: 18px;
+    }
+    section .list .item .content .title {
+        font-size: 32px;
+        width: 100%;
+    }
+    section .list .item .content .description {
+        font-size: 18px;
+        width: 100%;
+    }
+    section .list .item .content .next {
+        font-size: 18px;
+        width: 70%;
+    }
+    section .list .item .int_img {
+        width: 60%;
+        height: 40%;
+        right: 0;
+        transform: translate(10%, 0%);
+    }
+    .indicators {
+        top: 90%;
+        left: 50%;
+        width: 100vw;
+    }
+}
+
+@media (max-width: 600px) {
+    body {
+        font-size: 18px;
+        overflow: auto;
+    }
+    header img {
+        width: 120px;
+        height: 36px;
+    }
+    section .list {
+        width: 100vw;
+        min-height: 100vh;
+    }
+    section .list .item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        position: static;
+        min-height: 100vh;
+        padding-top: 60px;
+        padding-bottom: 40px;
+    }
+    section .list .item .int_img {
+        position: static;
+        width: 80vw;
+        height: auto;
+        min-height: 120px;
+        max-width: 320px;
+        margin: 0 auto 24px auto;
+        transform: none;
+        left: unset;
+        right: unset;
+        bottom: unset;
+    }
+    section .list .item .int_img img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    section .list .item .content {
+        position: static;
+        width: 90vw;
+        max-width: 400px;
+        left: unset;
+        top: unset;
+        gap: 12px;
+        padding: 0 8px;
+        align-items: center;
+        text-align: center;
+        margin: 0 auto;
+    }
+    section .list .item .content .welcome {
+        font-size: 18px;
+    }
+    section .list .item .content .title {
+        font-size: 22px;
+        width: 100%;
+    }
+    section .list .item .content .description {
+        font-size: 14px;
+        width: 100%;
+    }
+    section .list .item .content .next {
+        font-size: 16px;
+        width: 100%;
+        padding: 10px 0;
+        margin-top: 12px;
+    }
+    .indicators {
+        position: static;
+        margin: 24px auto 0 auto;
+        width: 100vw;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .indicators ul {
+        justify-content: center;
+        align-items: center;
+    }
+    .indicators ul li {
+        width: 12px;
+        height: 12px;
+    }
+}
+
