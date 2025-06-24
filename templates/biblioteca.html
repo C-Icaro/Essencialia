@@ -101,26 +101,7 @@
                     <h3 class="section-title">Plantas Amazônicas e Seus Óleos</h3>
                     
                     <div class="article-grid">
-                        <div class="article-card">
-                            <div class="article-icon">🌳</div>
-                            <h4>Propriedades terapêuticas dos óleos essenciais amazônicos</h4>
-                            <p>Efeitos medicinais e usos populares dos óleos extraídos da biodiversidade amazônica.</p>
-                            <a href="#" class="read-more">Ler mais</a>
-                        </div>
-                        
-                        <div class="article-card">
-                            <div class="article-icon">🌿</div>
-                            <h4>Andiroba</h4>
-                            <p>Informações sobre selos como orgânico, manejo florestal e comércio justo.</p>
-                            <a href="#" class="read-more">Ler mais</a>
-                        </div>
-                        
-                        <div class="article-card">
-                            <div class="article-icon">🌳</div>
-                            <h4>Canela-Preta</h4>
-                            <p>Descubra as propriedades, métodos de extração e aplicações do óleo essencial da casca de Ocotea catharinensis (canela-preta), uma espécie nativa da Mata Atlântica.</p>
-                            <a href="#" class="read-more">Ler mais</a>
-                        </div>
+                        <!-- Cards serão adicionados dinamicamente pelo AmazonPlantsCardManager -->
                     </div>
                 </section>
             </div>
@@ -130,6 +111,9 @@
     {% include 'components/novo_processo_modal.html' %}
     <script src="{{ url_for('static', filename='js/components/alerts.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/process_checker.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/remaining_time.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/ui_updater.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/amazon_plants_card_manager.js') }}"></script>
     <script src="{{ url_for('static', filename='js/novo_processo_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/biblioteca.js') }}"></script>
 </body>
