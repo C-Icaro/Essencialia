@@ -4,6 +4,7 @@ from mqtt.mqtt_handler import start_mqtt, mqtt_data
 import sqlite3
 from datetime import datetime, timedelta, timezone
 import os
+import socket
 
 app = Flask(__name__)
 app.config["BROKER_HOST"] = BROKER_HOST
@@ -328,4 +329,77 @@ def delete_process(process_id):
 from routes import *
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    def get_local_ip():
+        """Obtém o IP local da máquina na rede"""
+        try:
+            # Método 1: Tentar conectar ao Google (requer internet)
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+            s.close()
+            return local_ip
+        except Exception:
+            try:
+                # Método 2: Usar hostname para descobrir IP (não requer internet)
+                hostname = socket.gethostname()
+                local_ip = socket.gethostbyname(hostname)
+                # Verificar se não é 127.0.0.1
+                if local_ip != "127.0.0.1":
+                    return local_ip
+            except Exception:
+                pass
+            
+            try:
+                # Método 3: Listar todas as interfaces de rede
+                import subprocess
+                import platform
+                
+                if platform.system() == "Windows":
+                    # Windows: usar ipconfig
+                    result = subprocess.run(['ipconfig'], capture_output=True, text=True)
+                    lines = result.stdout.split('\n')
+                    for line in lines:
+                        if 'IPv4' in line and '192.168.' in line:
+                            # Extrair IP da linha
+                            ip = line.split(':')[-1].strip()
+                            if ip and ip != '127.0.0.1':
+                                return ip
+                else:
+                    # Linux/Mac: usar ifconfig ou ip addr
+                    try:
+                        result = subprocess.run(['ip', 'addr'], capture_output=True, text=True)
+                        lines = result.stdout.split('\n')
+                        for line in lines:
+                            if 'inet ' in line and '192.168.' in line:
+                                ip = line.split()[1].split('/')[0]
+                                if ip != '127.0.0.1':
+                                    return ip
+                    except:
+                        # Fallback para ifconfig
+                        result = subprocess.run(['ifconfig'], capture_output=True, text=True)
+                        lines = result.stdout.split('\n')
+                        for line in lines:
+                            if 'inet ' in line and '192.168.' in line:
+                                ip = line.split()[1]
+                                if ip != '127.0.0.1':
+                                    return ip
+            except Exception:
+                pass
+            
+            # Se todos os métodos falharem, retorna localhost
+            return "127.0.0.1"
+    
+    local_ip = get_local_ip()
+    port = 5000
+    
+    print("=" * 60)
+    print("🚀 Servidor Essencialia iniciado!")
+    print("=" * 60)
+    print(f"📍 Acesso local:     http://localhost:{port}")
+    print(f"🌐 Acesso na rede:   http://{local_ip}:{port}")
+    print("=" * 60)
+    print("💡 Para acessar de outros dispositivos na mesma rede,")
+    print("   use o endereço 'Acesso na rede' acima.")
+    print("=" * 60)
+    
+    app.run(debug=True, host='0.0.0.0', port=port)

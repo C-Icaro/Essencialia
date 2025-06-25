@@ -62,36 +62,32 @@
         <main class="main-content">
             <header class="header">
                 <h2>Biblioteca</h2>
-                <div class="search-bar">
-                    <input type="text" placeholder="Pesquisar">
-                    <span class="search-icon">🔍</span>
-                </div>
             </header>
             
             <!-- Biblioteca Content -->
             <div class="biblioteca-content">
                 <section class="article-section">
-                    <h3 class="section-title">Sustentabilidade e Práticas Responsáveis</h3>
+                    <h3 class="section-title">Área geral sobre óleos</h3>
                     
                     <div class="article-grid">
                         <div class="article-card">
-                            <div class="article-icon">🌱</div>
-                            <h4>Economia circular e agrofloresta: o papel dos óleos essenciais</h4>
-                            <p>Como a extração pode fazer parte de um modelo sustentável de produção rural.</p>
+                            <div class="article-icon">📖</div>
+                            <h4>Introdução aos óleos essenciais</h4>
+                            <p>Descubra a importância, diversidade e mercado dos óleos essenciais, suas funções ecológicas e métodos de extração.</p>
                             <a href="#" class="read-more">Ler mais</a>
                         </div>
                         
                         <div class="article-card">
-                            <div class="article-icon">🌿</div>
-                            <h4>Como colher sem prejudicar a regeneração das espécies</h4>
-                            <p>Orientações para extração responsável e conservação da biodiversidade.</p>
+                            <div class="article-icon">🧪</div>
+                            <h4>Óleos essenciais na Amazônia ricos em linalol</h4>
+                            <p>Conheça as principais espécies amazônicas ricas em linalol: pau-rosa, macacaporanga e catinga-de-mulata, suas propriedades e aplicações.</p>
                             <a href="#" class="read-more">Ler mais</a>
                         </div>
                         
                         <div class="article-card">
-                            <div class="article-icon">🏆</div>
-                            <h4>Certificações sustentáveis: o que são e como obtê-las</h4>
-                            <p>Informações sobre selos como orgânico, manejo florestal e comércio justo.</p>
+                            <div class="article-icon">💧</div>
+                            <h4>Óleos Essenciais e suas Aplicações</h4>
+                            <p>Conheça o conceito, métodos de extração, benefícios e as diversas aplicações dos óleos essenciais na indústria, saúde e bem-estar.</p>
                             <a href="#" class="read-more">Ler mais</a>
                         </div>
                     </div>
@@ -101,26 +97,7 @@
                     <h3 class="section-title">Plantas Amazônicas e Seus Óleos</h3>
                     
                     <div class="article-grid">
-                        <div class="article-card">
-                            <div class="article-icon">🌳</div>
-                            <h4>Propriedades terapêuticas dos óleos essenciais amazônicos</h4>
-                            <p>Efeitos medicinais e usos populares dos óleos extraídos da biodiversidade amazônica.</p>
-                            <a href="#" class="read-more">Ler mais</a>
-                        </div>
-                        
-                        <div class="article-card">
-                            <div class="article-icon">🌱</div>
-                            <h4>Hortelã</h4>
-                            <p>Orientações para extração responsável e conservação da biodiversidade.</p>
-                            <a href="#" class="read-more">Ler mais</a>
-                        </div>
-                        
-                        <div class="article-card">
-                            <div class="article-icon">🌿</div>
-                            <h4>Andiroba</h4>
-                            <p>Informações sobre selos como orgânico, manejo florestal e comércio justo.</p>
-                            <a href="#" class="read-more">Ler mais</a>
-                        </div>
+                        <!-- Cards serão adicionados dinamicamente pelo AmazonPlantsCardManager -->
                     </div>
                 </section>
             </div>
@@ -130,6 +107,9 @@
     {% include 'components/novo_processo_modal.html' %}
     <script src="{{ url_for('static', filename='js/components/alerts.js') }}"></script>
     <script src="{{ url_for('static', filename='js/components/process_checker.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/remaining_time.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/ui_updater.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/components/amazon_plants_card_manager.js') }}"></script>
     <script src="{{ url_for('static', filename='js/novo_processo_modal.js') }}"></script>
     <script src="{{ url_for('static', filename='js/biblioteca.js') }}"></script>
 </body>
